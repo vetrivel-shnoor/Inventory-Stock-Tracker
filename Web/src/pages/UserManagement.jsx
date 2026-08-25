@@ -5,6 +5,33 @@ import { Modal } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
+const UserAvatar = ({ user }) => {
+  const [imgError, setImgError] = useState(false);
+
+  const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith("http") || path.startsWith("blob:")) return path;
+    const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : '';
+    return `${baseUrl}${path}`;
+  };
+
+  const src = getImageUrl(user?.profilePicture);
+
+  if (src && !imgError) {
+    return (
+      <img
+        loading="lazy"
+        src={src}
+        alt={user?.fullname || 'User'}
+        className="w-full h-full object-cover"
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return <User size={20} className="text-[var(--color-text-secondary)]" />;
+};
+
 export const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -300,11 +327,7 @@ export const UserManagement = () => {
                             />
                           )}
                           <div className="w-10 h-10 rounded-full bg-white/10 dark:bg-black/20 border border-[var(--color-border-subtle)] flex items-center justify-center overflow-hidden flex-shrink-0">
-                            {u.profilePicture ? (
-                              <img loading="lazy" src={getImageUrl(u.profilePicture)} alt={u.fullname} className="w-full h-full object-cover" />
-                            ) : (
-                              <User size={20} className="text-[var(--color-text-secondary)]" />
-                            )}
+                            <UserAvatar user={u} />
                           </div>
                           <div className="min-w-0">
                             <div className="font-medium text-[var(--color-text-primary)] truncate">{u.fullname}</div>
