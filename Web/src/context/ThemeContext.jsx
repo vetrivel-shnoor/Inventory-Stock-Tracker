@@ -1,38 +1,32 @@
-// src/context/ThemeContext.js
-import { createContext, useState, useEffect } from "react";
-import { lightTheme, darkTheme } from "../theme";
+// src/context/ThemeContext.jsx
+import React, { createContext, useState, useEffect } from "react";
 
 export const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  // Check localStorage first, default to dark
   const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem("theme");
-    return savedTheme === "dark" ? darkTheme : lightTheme;
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) return savedTheme;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "light";
   });
 
-  const toggleTheme = () => {
-    setTheme((prevTheme) =>
-      prevTheme.name === "dark" ? lightTheme : darkTheme
-    );
-  };
-
   useEffect(() => {
-    localStorage.setItem("theme", theme.name);
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
   }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div
-        style={{
-          background: theme.bg,
-          color: theme.text,
-          minHeight: "100vh",
-          transition: "background 0.3s ease, color 0.3s ease",
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </ThemeContext.Provider>
   );
 };

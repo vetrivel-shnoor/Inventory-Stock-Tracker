@@ -1,4 +1,38 @@
 @import "tailwindcss";
+
+@theme {
+  --color-bg-base: var(--color-bg-base);
+  --color-bg-surface: var(--color-bg-surface);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-primary: var(--color-primary);
+  --color-success: var(--color-success);
+  --color-danger: var(--color-danger);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+}
+
+:root {
+  --color-bg-base: #F8FAFC;
+  --color-bg-surface: #FFFFFF;
+  --color-border-subtle: #E2E8F0;
+  --color-primary: #2563EB;
+  --color-success: #059669;
+  --color-danger: #DC2626;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #64748B;
+}
+
+.dark {
+  --color-bg-base: #0B0F19;
+  --color-bg-surface: #111827;
+  --color-border-subtle: #1F2937;
+  --color-primary: #3B82F6;
+  --color-success: #10B981;
+  --color-danger: #EF4444;
+  --color-text-primary: #F9FAFB;
+  --color-text-secondary: #9CA3AF;
+}
+
 /* For Chrome, Safari, Edge */
 ::-webkit-scrollbar {
   display: none;
@@ -15,6 +49,8 @@
 }
 html,
 body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
   scroll-behavior: smooth;
 }
