@@ -18,6 +18,7 @@ require("../models/userModel");
 // Modular image profiles. Add new keys here to support other models in the future.
 const IMAGE_PROFILES = {
   User: (pipeline) => pipeline.resize(500, 500, { fit: "cover" }),
+  Product: (pipeline) => pipeline.resize(800, 800, { fit: "contain" }),
   // Default fallback if needed
   default: (pipeline) => pipeline.resize(800, 800, { fit: "inside" }),
 };
