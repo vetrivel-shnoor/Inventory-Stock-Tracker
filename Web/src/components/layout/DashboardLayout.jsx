@@ -7,6 +7,10 @@ import toast from 'react-hot-toast';
 
 import { logout } from '../../services/authApi';
 
+/**
+ * AvatarImage component displays the user's profile picture or a fallback initial.
+ * It handles image loading states and gracefully falls back on error.
+ */
 const AvatarImage = ({ user }) => {
   const [blobLoaded, setBlobLoaded] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
@@ -53,6 +57,12 @@ const AvatarImage = ({ user }) => {
     </>
   );
 };
+
+/**
+ * DashboardLayout component wraps the main application routes.
+ * It provides the sidebar, mobile navigation, and common layout structure.
+ * Employs a glassmorphic aesthetic to match the overall design system.
+ */
 export const DashboardLayout = () => {
   const { user, setUser } = useApp();
   const { theme, toggleTheme } = React.useContext(ThemeContext);
@@ -94,24 +104,27 @@ export const DashboardLayout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-[var(--color-bg-base)] text-[var(--color-text-primary)] transition-colors duration-300 overflow-hidden">
+    <div className="flex h-screen bg-[var(--color-bg-base)] text-[var(--color-text-primary)] transition-colors duration-300 overflow-hidden relative">
       
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
-        <div className="p-6 flex items-center justify-between border-b border-[var(--color-border-subtle)]">
+      {/* Desktop Sidebar - Glassmorphic */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] backdrop-blur-xl relative z-10">
+        {/* Subtle overlay gradient to give glass depth */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent dark:from-white/5 dark:to-transparent pointer-events-none" />
+        
+        <div className="p-6 flex items-center justify-between border-b border-[var(--color-border-subtle)] relative z-10">
           <h1 className="text-xl font-bold tracking-tight text-[var(--color-primary)]">StockTracker</h1>
         </div>
         
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto relative z-10">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 font-medium ${
                   isActive
-                    ? 'bg-[var(--color-primary)] text-white shadow-md'
-                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-base)] hover:text-[var(--color-text-primary)]'
+                    ? 'bg-gradient-to-r from-[var(--color-primary)] to-blue-500/80 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] backdrop-blur-md'
+                    : 'text-[var(--color-text-secondary)] hover:bg-white/40 dark:hover:bg-white/5 hover:text-[var(--color-text-primary)] hover:backdrop-blur-sm'
                 }`
               }
             >
@@ -121,10 +134,10 @@ export const DashboardLayout = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[var(--color-border-subtle)]">
+        <div className="p-4 border-t border-[var(--color-border-subtle)] relative z-10">
           <div className="flex items-center justify-between mb-4 px-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden border border-[var(--color-border-subtle)] relative">
+              <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden border border-[var(--color-border-subtle)] relative shadow-sm">
                 <AvatarImage user={user} />
               </div>
               <div className="flex flex-col">
@@ -138,7 +151,7 @@ export const DashboardLayout = () => {
             </div>
             <button 
               onClick={toggleTheme} 
-              className="p-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-300/60 dark:border-slate-700/60 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
+              className="p-2 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-[var(--color-border-subtle)] hover:scale-105 active:scale-95 shadow-sm transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               {theme === 'dark' ? (
@@ -150,7 +163,7 @@ export const DashboardLayout = () => {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-500 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-500 bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100/80 dark:hover:bg-red-900/30 backdrop-blur-sm rounded-lg transition-all duration-300"
           >
             <LogOut size={16} />
             Logout
@@ -158,14 +171,15 @@ export const DashboardLayout = () => {
         </div>
       </aside>
 
-      {/* Mobile Top Header (Tablet/Mobile) */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[var(--color-bg-surface)] border-b border-[var(--color-border-subtle)] z-20">
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-transparent">
+        {/* Mobile Top Header (Tablet/Mobile) - Glassmorphic */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[var(--color-bg-surface)] backdrop-blur-xl border-b border-[var(--color-border-subtle)] z-20">
           <h1 className="text-lg font-bold tracking-tight text-[var(--color-primary)]">StockTracker</h1>
           <div className="flex items-center gap-2">
              <button 
               onClick={toggleTheme} 
-              className="p-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-300/60 dark:border-slate-700/60 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
+              className="p-2 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-[var(--color-border-subtle)] hover:scale-105 active:scale-95 shadow-sm transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               {theme === 'dark' ? (
@@ -174,19 +188,19 @@ export const DashboardLayout = () => {
                 <Moon size={18} className="text-indigo-600 drop-shadow-[0_0_8px_rgba(79,70,229,0.3)]" />
               )}
             </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden relative">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden relative border border-[var(--color-border-subtle)] shadow-sm">
               <AvatarImage user={user} />
             </div>
           </div>
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[var(--color-bg-base)] relative scroll-smooth pb-20 md:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-transparent relative scroll-smooth pb-20 md:pb-8">
           <Outlet />
         </main>
 
-        {/* Mobile Bottom Navigation */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--color-bg-surface)] border-t border-[var(--color-border-subtle)] flex justify-around p-2 z-20 pb-safe">
+        {/* Mobile Bottom Navigation - Glassmorphic */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--color-bg-surface)] backdrop-blur-xl border-t border-[var(--color-border-subtle)] flex justify-around p-2 z-20 pb-safe">
           {navItems.map((item) => (
             <NavLink
               key={item.path}

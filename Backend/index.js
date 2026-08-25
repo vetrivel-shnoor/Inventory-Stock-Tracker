@@ -48,11 +48,26 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 const uploadDir = path.join(__dirname, "public", "uploads");
 
+// Function to clear a directory
+const clearDirectory = (directory) => {
+  if (fs.existsSync(directory)) {
+    fs.readdirSync(directory).forEach((file) => {
+      const curPath = path.join(directory, file);
+      if (fs.lstatSync(curPath).isDirectory()) {
+        clearDirectory(curPath);
+      } else {
+        fs.unlinkSync(curPath);
+      }
+    });
+  }
+};
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log('📂 Created "public/uploads" directory');
 } else {
-  console.log('📂 "public/uploads" directory already exists');
+  console.log('📂 "public/uploads" directory already exists, clearing contents...');
+  clearDirectory(uploadDir);
 }
 
 app.use("/public/uploads", express.static(path.join(__dirname, "public/uploads")));

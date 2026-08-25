@@ -251,7 +251,7 @@ export default function PersonalInfoTab({ theme, user, setUser }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] p-8 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold uppercase tracking-tight">
           Personal Details

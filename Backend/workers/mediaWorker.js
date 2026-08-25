@@ -160,6 +160,9 @@ const worker = new Worker(
     } catch (error) {
       console.error(`❌ [Worker Failed] ${error.message}`);
       throw error;
+    } finally {
+      // Ensure cleanup runs even on failure
+      if (absoluteInputPath) cleanupFile(absoluteInputPath);
     }
   },
   {

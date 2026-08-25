@@ -6,6 +6,13 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { Modal } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
 
+/**
+ * Transactions Component
+ * 
+ * Displays a ledger of all stock movements (IN and OUT).
+ * Allows users to record new stock transactions.
+ * Utilizes a glassmorphic aesthetic to match the global UI system.
+ */
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,8 +108,8 @@ export default function Transactions() {
         </div>
       </div>
 
-      {/* Audit Log Table */}
-      <div className="flex-1 bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden shadow-sm flex flex-col">
+      {/* Audit Log Table - Glassmorphic */}
+      <div className="flex-1 bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl overflow-hidden shadow-sm flex flex-col">
         {loading ? (
           <div className="p-4"><TableSkeleton rows={10} /></div>
         ) : transactions.length === 0 ? (
@@ -111,7 +118,7 @@ export default function Transactions() {
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[var(--color-bg-base)] border-b border-[var(--color-border-subtle)]">
+                <tr className="bg-white/10 dark:bg-black/10 border-b border-[var(--color-border-subtle)] backdrop-blur-sm">
                   <th className="p-4 font-semibold text-sm">Date & Time</th>
                   <th className="p-4 font-semibold text-sm">Product</th>
                   <th className="p-4 font-semibold text-sm">Type</th>
@@ -122,7 +129,7 @@ export default function Transactions() {
               </thead>
               <tbody className="divide-y divide-[var(--color-border-subtle)]">
                 {transactions.map(tx => (
-                  <tr key={tx._id} className="hover:bg-[var(--color-bg-base)] transition-colors">
+                  <tr key={tx._id} className="hover:bg-white/20 dark:hover:bg-white/5 transition-colors">
                     <td className="p-4 text-sm text-[var(--color-text-secondary)] whitespace-nowrap">
                       {new Date(tx.createdAt).toLocaleString()}
                     </td>

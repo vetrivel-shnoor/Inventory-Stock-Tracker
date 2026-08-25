@@ -7,6 +7,14 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
 
+/**
+ * Dashboard Component
+ * 
+ * Displays the high-level overview of the inventory system.
+ * Fetches stats like total products, valuation, and low stock alerts.
+ * Renders a BarChart for visual representation and a ledger stream for recent activities.
+ * Implements a glassmorphic design for all cards and containers.
+ */
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,10 +40,10 @@ export default function Dashboard() {
           {[1, 2, 3, 4].map((i) => <CardSkeleton key={i} />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-[var(--color-bg-surface)] p-4 rounded-xl border border-[var(--color-border-subtle)] h-96">
+          <div className="lg:col-span-2 bg-[var(--color-bg-surface)] backdrop-blur-md p-4 rounded-xl border border-[var(--color-border-subtle)] h-96">
             <CardSkeleton />
           </div>
-          <div className="bg-[var(--color-bg-surface)] p-4 rounded-xl border border-[var(--color-border-subtle)]">
+          <div className="bg-[var(--color-bg-surface)] backdrop-blur-md p-4 rounded-xl border border-[var(--color-border-subtle)]">
             <TableSkeleton rows={5} />
           </div>
         </div>
@@ -87,8 +95,8 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart */}
-        <div className="lg:col-span-2 bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl p-6 shadow-sm">
+        {/* Chart Section */}
+        <div className="lg:col-span-2 bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
           <h2 className="text-lg font-semibold mb-4">Inventory Health</h2>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -98,7 +106,12 @@ export default function Dashboard() {
                 <YAxis tick={{ fill: 'var(--color-text-secondary)' }} axisLine={false} tickLine={false} />
                 <Tooltip 
                   cursor={false}
-                  contentStyle={{ backgroundColor: 'var(--color-bg-surface)', borderColor: 'var(--color-border-subtle)', borderRadius: '8px' }} 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--color-bg-surface)', 
+                    borderColor: 'var(--color-border-subtle)', 
+                    borderRadius: '12px',
+                    backdropFilter: 'blur(16px)'
+                  }} 
                   itemStyle={{ color: 'var(--color-text-primary)' }}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
@@ -111,8 +124,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Ledger Stream */}
-        <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl p-6 shadow-sm flex flex-col">
+        {/* Ledger Stream Section */}
+        <div className="bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
           <h2 className="text-lg font-semibold mb-4">Recent Ledger Stream</h2>
           
           <div className="flex-1 overflow-y-auto">
@@ -151,15 +164,19 @@ export default function Dashboard() {
   );
 }
 
+/**
+ * KpiCard Component
+ * Displays a single key performance indicator in a glassmorphic card.
+ */
 function KpiCard({ title, value, icon: Icon, color, bg }) {
   return (
-    <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-medium text-[var(--color-text-secondary)] mb-1">{title}</span>
           <span className="text-2xl font-bold">{value}</span>
         </div>
-        <div className={`p-3 rounded-xl ${bg} ${color}`}>
+        <div className={`p-3 rounded-xl ${bg} ${color} backdrop-blur-sm border border-white/10 dark:border-white/5`}>
           <Icon size={24} />
         </div>
       </div>

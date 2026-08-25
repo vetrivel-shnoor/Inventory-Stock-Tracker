@@ -1,6 +1,12 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 
+/**
+ * Retrieve all users in the system (excluding their passwords).
+ * Used by superadmins in the User Management dashboard.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -10,6 +16,13 @@ exports.getUsers = async (req, res) => {
   }
 };
 
+/**
+ * Create a new user account.
+ * Hashes the provided password before saving.
+ * Default role is 'user' if not specified.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.createUser = async (req, res) => {
   try {
     const { fullname, email, password, role } = req.body;
@@ -38,6 +51,12 @@ exports.createUser = async (req, res) => {
   }
 };
 
+/**
+ * Update a user's role (e.g., from 'user' to 'admin').
+ * Protects 'superadmin' roles from being modified to prevent privilege escalation.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.updateUserRole = async (req, res) => {
   try {
     const { id } = req.params;
@@ -60,6 +79,13 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
+/**
+ * Update comprehensive user details (name, email, role, password).
+ * Hashes the new password if provided.
+ * Contains safety checks to prevent modifying other superadmins.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -91,6 +117,12 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+/**
+ * Delete a user from the system.
+ * Contains safety checks to prevent deleting a superadmin.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;

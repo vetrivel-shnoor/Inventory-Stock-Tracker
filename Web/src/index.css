@@ -13,8 +13,8 @@
 
 :root {
   --color-bg-base: #F8FAFC;
-  --color-bg-surface: #FFFFFF;
-  --color-border-subtle: #CBD5E1;
+  --color-bg-surface: rgba(255, 255, 255, 0.6); /* Translucent surface */
+  --color-border-subtle: rgba(203, 213, 225, 0.5); /* Glass edge */
   --color-primary: #2563EB;
   --color-success: #059669;
   --color-danger: #DC2626;
@@ -24,8 +24,8 @@
 
 .dark {
   --color-bg-base: #0B0F19;
-  --color-bg-surface: rgba(17, 24, 39, 0.75);
-  --color-border-subtle: rgba(51, 65, 85, 0.6);
+  --color-bg-surface: rgba(17, 24, 39, 0.5); /* Enhanced translucency for dark mode */
+  --color-border-subtle: rgba(255, 255, 255, 0.1); /* Subtle glass edge */
   --color-primary: #3B82F6;
   --color-success: #10B981;
   --color-danger: #EF4444;
@@ -53,24 +53,28 @@ html, body {
   color: var(--color-text-primary);
   transition: background-color 0.5s ease, color 0.5s ease;
   scroll-behavior: smooth;
+  /* Richer dynamic backgrounds for light mode */
   background-image: 
-    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
 .dark body {
+  /* Richer dynamic backgrounds for dark mode */
   background-image: 
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 40%),
-    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 40%);
+    radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.2) 0px, transparent 40%),
+    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.15) 0px, transparent 40%),
+    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.2) 0px, transparent 40%);
 }
 
 .bg-\[var\(--color-bg-surface\)\] {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); /* Enhanced depth */
 }
 
 .dark .bg-\[var\(--color-bg-surface\)\] {
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); /* Enhanced depth */
 }

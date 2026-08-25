@@ -4,6 +4,13 @@ import { userApi } from '../services/userApi';
 import { Modal } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
 
+/**
+ * UserManagement Component
+ * 
+ * Provides a dashboard for superadmins to manage users.
+ * Allows creating, updating details/roles, and deleting users.
+ * Uses a unified glassmorphic design system.
+ */
 export const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,11 +118,11 @@ export const UserManagement = () => {
         </button>
       </div>
 
-      <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[var(--color-bg-base)] border-b border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] text-sm">
+              <tr className="bg-white/10 dark:bg-black/10 border-b border-[var(--color-border-subtle)] backdrop-blur-sm text-[var(--color-text-secondary)] text-sm">
                 <th className="p-4 font-medium">User</th>
                 <th className="p-4 font-medium">Role</th>
                 <th className="p-4 font-medium">Joined</th>
@@ -124,10 +131,10 @@ export const UserManagement = () => {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u._id} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-base)] transition-colors group">
+                <tr key={u._id} className="border-b border-[var(--color-border-subtle)] hover:bg-white/20 dark:hover:bg-white/5 transition-colors group">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-white/10 dark:bg-black/20 border border-[var(--color-border-subtle)] flex items-center justify-center overflow-hidden flex-shrink-0">
                         {u.profilePicture ? (
                           <img src={getImageUrl(u.profilePicture)} alt={u.fullname} className="w-full h-full object-cover" />
                         ) : (
@@ -149,10 +156,10 @@ export const UserManagement = () => {
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u._id, u.role, e.target.value)}
-                        className="bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block p-2"
+                        className="bg-transparent backdrop-blur-md border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block p-2 hover:bg-white/10 transition-colors"
                       >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
+                        <option value="user" className="bg-[var(--color-bg-base)]">User</option>
+                        <option value="admin" className="bg-[var(--color-bg-base)]">Admin</option>
                       </select>
                     )}
                   </td>

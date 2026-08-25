@@ -7,6 +7,13 @@ import { Modal } from '../components/ui/Modal';
 import { useApp } from '../context/Appcontext';
 import toast from 'react-hot-toast';
 
+/**
+ * Products Component
+ * 
+ * Manages the entire product catalog including viewing (Grid/Table modes),
+ * searching, filtering, creating, updating, and deleting products.
+ * Uses a glassmorphic aesthetic to match the global UI system.
+ */
 export default function Products() {
   const { user } = useApp();
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
@@ -130,8 +137,8 @@ export default function Products() {
         )}
       </div>
 
-      {/* Toolbar */}
-      <div className="bg-[var(--color-bg-surface)] p-4 rounded-xl border border-[var(--color-border-subtle)] flex flex-col lg:flex-row gap-4 justify-between items-center shadow-sm">
+      {/* Toolbar - Glassmorphic */}
+      <div className="bg-[var(--color-bg-surface)] backdrop-blur-xl p-4 rounded-xl border border-[var(--color-border-subtle)] flex flex-col lg:flex-row gap-4 justify-between items-center shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={18} />
@@ -196,10 +203,16 @@ export default function Products() {
         {loading ? (
           viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1,2,3,4,5,6].map(i => <CardSkeleton key={i} />)}
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="bg-[var(--color-bg-surface)] backdrop-blur-md rounded-xl">
+                  <CardSkeleton />
+                </div>
+              ))}
             </div>
           ) : (
-            <TableSkeleton rows={8} />
+            <div className="bg-[var(--color-bg-surface)] backdrop-blur-md rounded-xl p-4 border border-[var(--color-border-subtle)]">
+              <TableSkeleton rows={8} />
+            </div>
           )
         ) : products.length === 0 ? (
           <EmptyState title="No Products Found" description="Try adjusting your search or filters." />
@@ -208,8 +221,8 @@ export default function Products() {
             {products.map(product => {
               const health = getStockHealth(product.currentStock, product.lowStockThreshold);
               return (
-                <div key={product._id} className="bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden hover:shadow-lg transition-all group flex flex-col">
-                  <div className="h-48 bg-gradient-to-br from-[var(--color-bg-base)] to-[var(--color-border-subtle)] relative">
+                <div key={product._id} className="bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col">
+                  <div className="h-48 bg-gradient-to-br from-white/10 to-transparent dark:from-white/5 dark:to-transparent relative border-b border-[var(--color-border-subtle)]">
                     {product.image ? (
                       <img src={product.image.startsWith('http') ? product.image : `http://localhost:3000${product.image}`} alt={product.name} className="w-full h-full object-contain p-4" />
                     ) : (
@@ -256,11 +269,11 @@ export default function Products() {
             })}
           </div>
         ) : (
-          <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[var(--color-bg-base)] border-b border-[var(--color-border-subtle)]">
+                  <tr className="bg-white/10 dark:bg-black/10 border-b border-[var(--color-border-subtle)] backdrop-blur-sm">
                     <th className="p-4 font-semibold text-sm">Product</th>
                     <th className="p-4 font-semibold text-sm">SKU</th>
                     <th className="p-4 font-semibold text-sm">Category</th>
@@ -273,9 +286,9 @@ export default function Products() {
                   {products.map(product => {
                     const health = getStockHealth(product.currentStock, product.lowStockThreshold);
                     return (
-                      <tr key={product._id} className="hover:bg-[var(--color-bg-base)] transition-colors">
+                      <tr key={product._id} className="hover:bg-white/20 dark:hover:bg-white/5 transition-colors">
                         <td className="p-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] flex items-center justify-center overflow-hidden">
+                          <div className="w-10 h-10 rounded-lg bg-white/10 dark:bg-black/20 border border-[var(--color-border-subtle)] flex items-center justify-center overflow-hidden">
                              {product.image ? <img src={product.image.startsWith('http') ? product.image : `http://localhost:3000${product.image}`} className="w-full h-full object-cover" /> : <Package size={20} className="text-[var(--color-text-secondary)]" />}
                           </div>
                           <span className="font-medium">{product.name}</span>

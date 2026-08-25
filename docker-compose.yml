@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: stocktracker_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: stocktracker_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio
+    container_name: stocktracker_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: stocktracker_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - MONGO_DB=mongodb://mongodb:27017/Stock
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=password123
+      - MINIO_BUCKET_NAME=icuman
+      - FRONTEND_URL=http://localhost:5173
+      # Note: JWT secrets and other envs should ideally be injected securely, placing dummy values here for easy spin-up
+      - JWT_SECRET=any_long_random_string_here_12345
+      - JWT_ACCESS_SECRET=another-super-secure-random-string-for-access-tokens
+      - DEFAULT_SUPERADMIN_EMAIL=admin@incuman.com
+      - DEFAULT_SUPERADMIN_PASSWORD=5fJn1aPsaNmn3ei7YnxNW7c9X0su4ZBl
+    depends_on:
+      - mongodb
+      - redis
+      - minio
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./Web
+      dockerfile: Dockerfile
+      # Providing build args if needed by Vite
+      args:
+        - VITE_API_URL=http://localhost:3000
+    container_name: stocktracker_frontend
+    ports:
+      - "5173:80" # Map 5173 to Nginx 80 to avoid breaking user's expectation
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  redis_data:
+  minio_data:

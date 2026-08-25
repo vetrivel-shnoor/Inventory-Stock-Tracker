@@ -5,6 +5,11 @@ const { mediaQueue } = require('../services/queue');
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * Get all products with optional filtering (search, category, low stock).
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.getProducts = async (req, res) => {
   try {
     const { search, category, lowStock } = req.query;
@@ -32,6 +37,11 @@ exports.getProducts = async (req, res) => {
   }
 };
 
+/**
+ * Get a single product by its ID, along with its recent transactions.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -48,6 +58,13 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+/**
+ * Create a new product. Uses a MongoDB session transaction to ensure atomicity.
+ * If initial stock is provided, it automatically records an "IN" transaction.
+ * Queues image processing if an image file is uploaded.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.createProduct = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -113,6 +130,12 @@ exports.createProduct = async (req, res) => {
   }
 };
 
+/**
+ * Update an existing product's details.
+ * Queues image processing if a new image file is uploaded.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.updateProduct = async (req, res) => {
   try {
     const { name, category, price, lowStockThreshold } = req.body;
@@ -144,6 +167,12 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
+/**
+ * Delete a product by its ID. Uses a MongoDB session transaction to ensure
+ * all related transactions are also deleted to maintain data integrity.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
 exports.deleteProduct = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
