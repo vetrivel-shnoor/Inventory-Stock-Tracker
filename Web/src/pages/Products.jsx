@@ -403,7 +403,7 @@ export default function Products() {
                     <span className="px-2 py-1 bg-black/40 backdrop-blur-md text-white text-xs rounded border border-white/10 shadow-sm">{product.category}</span>
                   </div>
                   {product.image ? (
-                    <img loading="lazy" src={product.image.startsWith('http') ? product.image : `http://localhost:3000${product.image}`} alt={product.name} className="w-full h-full object-contain filter group-hover:scale-105 transition-transform duration-500" />
+                    <img loading="lazy" src={resolveImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain filter group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center opacity-30 text-[var(--color-text-secondary)]">
                       <Package size={48} className="mb-2" />
@@ -497,7 +497,7 @@ export default function Products() {
                         )}
                         <div className="flex-1 flex items-center gap-3">
                            <div className="w-10 h-10 rounded-lg bg-black/20 overflow-hidden flex items-center justify-center">
-                              {product.image ? <img loading="lazy" src={product.image.startsWith('http') ? product.image : `http://localhost:3000${product.image}`} className="w-full h-full object-cover" /> : <Package size={16}/>}
+                              {product.image ? <img loading="lazy" src={resolveImageUrl(product.image)} className="w-full h-full object-cover" /> : <Package size={16}/>}
                            </div>
                            <span className="font-medium truncate">{product.name}</span>
                         </div>
