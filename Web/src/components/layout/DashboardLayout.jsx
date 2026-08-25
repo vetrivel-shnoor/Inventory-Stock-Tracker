@@ -155,13 +155,13 @@ export const DashboardLayout = () => {
             </div>
             <button 
               onClick={toggleTheme} 
-              className="p-2 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-[var(--color-border-subtle)] hover:scale-105 active:scale-95 shadow-sm transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
+              className="p-2.5 rounded-xl bg-gradient-to-tr from-indigo-500/10 via-purple-500/15 to-blue-500/10 hover:from-indigo-500/25 hover:to-purple-500/25 dark:from-amber-500/20 dark:via-orange-500/20 dark:to-yellow-500/10 dark:hover:from-amber-500/35 dark:hover:to-orange-500/35 backdrop-blur-md border border-indigo-500/20 dark:border-amber-500/30 hover:scale-105 active:scale-95 shadow-[0_2px_12px_rgba(99,102,241,0.15)] dark:shadow-[0_2px_12px_rgba(251,191,36,0.2)] transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               {theme === 'dark' ? (
-                <Sun size={18} className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                <Sun size={18} className="text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-in spin-in-90 duration-300" />
               ) : (
-                <Moon size={18} className="text-indigo-600 drop-shadow-[0_0_8px_rgba(79,70,229,0.3)]" />
+                <Moon size={18} className="text-indigo-600 dark:text-indigo-400 drop-shadow-[0_0_10px_rgba(79,70,229,0.5)] animate-in spin-in-[-90deg] duration-300" />
               )}
             </button>
           </div>
@@ -183,13 +183,13 @@ export const DashboardLayout = () => {
           <div className="flex items-center gap-2">
              <button 
               onClick={toggleTheme} 
-              className="p-2 rounded-xl bg-white/50 dark:bg-black/20 backdrop-blur-md border border-[var(--color-border-subtle)] hover:scale-105 active:scale-95 shadow-sm transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
+              className="p-2.5 rounded-xl bg-gradient-to-tr from-indigo-500/10 via-purple-500/15 to-blue-500/10 hover:from-indigo-500/25 hover:to-purple-500/25 dark:from-amber-500/20 dark:via-orange-500/20 dark:to-yellow-500/10 dark:hover:from-amber-500/35 dark:hover:to-orange-500/35 backdrop-blur-md border border-indigo-500/20 dark:border-amber-500/30 hover:scale-105 active:scale-95 shadow-[0_2px_12px_rgba(99,102,241,0.15)] dark:shadow-[0_2px_12px_rgba(251,191,36,0.2)] transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               {theme === 'dark' ? (
-                <Sun size={18} className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                <Sun size={18} className="text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-in spin-in-90 duration-300" />
               ) : (
-                <Moon size={18} className="text-indigo-600 drop-shadow-[0_0_8px_rgba(79,70,229,0.3)]" />
+                <Moon size={18} className="text-indigo-600 dark:text-indigo-400 drop-shadow-[0_0_10px_rgba(79,70,229,0.5)] animate-in spin-in-[-90deg] duration-300" />
               )}
             </button>
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden relative border border-[var(--color-border-subtle)] shadow-sm">

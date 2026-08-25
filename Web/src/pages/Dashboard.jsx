@@ -126,8 +126,13 @@ export default function Dashboard() {
               <h2 className="text-base font-semibold mb-2">Category Value Distribution</h2>
               <div className="flex-1 h-48 min-h-[160px] relative">
                 {stats?.categoryDistribution?.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
+                  <>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                      <span className="text-3xl font-black text-[var(--color-text-primary)]">{stats.categoryDistribution.length}</span>
+                      <span className="text-[10px] uppercase font-bold text-[var(--color-text-secondary)] tracking-widest mt-1">Categories</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
                       <Pie
                         data={stats.categoryDistribution}
                         cx="50%"
@@ -151,8 +156,9 @@ export default function Dashboard() {
                           backdropFilter: 'blur(16px)'
                         }}
                       />
-                    </PieChart>
-                  </ResponsiveContainer>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </>
                 ) : (
                   <div className="flex items-center justify-center h-full text-sm text-[var(--color-text-secondary)]">No category data</div>
                 )}

@@ -23,11 +23,29 @@ initializeMinio();
 
 const { createServer } = require("http");
 const app = express();
+app.set("trust proxy", 1); // Trust first proxy (Nginx) for HTTPS headers & OAuth redirects
 const server = createServer(app);
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://inventory.cyberanzen.icu"
+].filter(Boolean);
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173", // Allow requests from your frontend
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true, // Allow cookies to be sent
   })
 );
@@ -105,7 +123,7 @@ const port = process.env.PORT || 3000;
     });
 
     server.listen(port, "0.0.0.0", () => {
-      console.log(`☑️  Sass server running on http://127.0.0.1:${port}`);
+      console.log(`☑️  Shnoor-Demo server running on http://127.0.0.1:${port}`);
       console.log("=".repeat(process.stdout.columns || 80));
     });
   } catch (err) {

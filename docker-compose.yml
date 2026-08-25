@@ -31,6 +31,7 @@ services:
       context: ./Backend
       dockerfile: Dockerfile
     container_name: stocktracker_backend
+    env_file: ./Backend/.env
     volumes:
       - backend_uploads:/app/public/uploads
     environment:
@@ -46,12 +47,15 @@ services:
       - MINIO_ACCESS_KEY=admin
       - MINIO_SECRET_KEY=password123
       - MINIO_BUCKET_NAME=icuman
-      - FRONTEND_URL=http://localhost:5173
+      - FRONTEND_URL=https://inventory.cyberanzen.icu
       # Note: JWT secrets and other envs should ideally be injected securely, placing dummy values here for easy spin-up
-      - JWT_SECRET=any_long_random_string_here_12345
-      - JWT_ACCESS_SECRET=another-super-secure-random-string-for-access-tokens
-      - DEFAULT_SUPERADMIN_EMAIL=admin@incuman.com
-      - DEFAULT_SUPERADMIN_PASSWORD=5fJn1aPsaNmn3ei7YnxNW7c9X0su4ZBl
+      - JWT_SECRET=${JWT_SECRET:-any_long_random_string_here_12345}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:-another-super-secure-random-string-for-access-tokens}
+      - DEFAULT_SUPERADMIN_EMAIL=${DEFAULT_SUPERADMIN_EMAIL:-admin@incuman.com}
+      - DEFAULT_SUPERADMIN_PASSWORD=${DEFAULT_SUPERADMIN_PASSWORD:-5fJn1aPsaNmn3ei7YnxNW7c9X0su4ZBl}
+      # Pass OAuth Secrets to avoid crashing Passport
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     depends_on:
       - mongodb
       - redis
