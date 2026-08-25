@@ -8,9 +8,9 @@ const crypto = require('crypto');
 
 // Seed Configuration
 const USERS_COUNT = 100;
-const PRODUCTS_COUNT = 1000;
-const TRANSACTIONS_COUNT = 10000;
-const AUDIT_LOGS_COUNT = 2000;
+const PRODUCTS_COUNT = 20;
+const TRANSACTIONS_COUNT = 100;
+const AUDIT_LOGS_COUNT = 30;
 
 // Dummy Images for randomization (from previous seed)
 const DUMMY_IMAGES = [
