@@ -186,7 +186,8 @@ export default function Products() {
     if (!window.confirm(`Are you sure you want to archive ${selectedIds.length} products?`)) return;
     try {
       await inventoryApi.deleteBulkProducts(selectedIds);
-      setProducts(products.filter(p => !selectedIds.includes(p._id)));
+      fetchProducts(1);
+      setPage(1);
       setSelectedIds([]);
       toast.success('Products archived successfully');
     } catch (error) {

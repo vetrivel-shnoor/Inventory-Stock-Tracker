@@ -11,10 +11,9 @@ const https = require('https');
 const { minioClient, initializeMinio } = require('../config/minio');
 
 // Seed Configuration
-const USERS_COUNT = 100;
-const PRODUCTS_COUNT = 1000;
-const TRANSACTIONS_COUNT = 10000;
-const AUDIT_LOGS_COUNT = 2000;
+const PRODUCTS_COUNT = 20;
+const TRANSACTIONS_COUNT = 100;
+const AUDIT_LOGS_COUNT = 30;
 
 // Dummy Images for randomization (will be populated from MinIO)
 let DUMMY_IMAGES = [];
@@ -64,36 +63,26 @@ async function runSeeder() {
 
     await initializeMinio();
 
-    // 1. Clear Database (Keep superadmin)
-    console.log("🗑️ Clearing existing data...");
+    // 1. Clear Database (Products, Transactions, AuditLogs)
+    console.log("🗑️ Clearing existing product, transaction, and audit log data...");
     await Product.deleteMany({});
     await Transaction.deleteMany({});
     await AuditLog.deleteMany({});
-    await User.deleteMany({ role: { $ne: 'superadmin' } }); // Keep the superadmin
     console.log("✅ Cleared Collections");
 
-    const superAdmin = await User.findOne({ role: 'superadmin' });
-    if (!superAdmin) {
-      console.error("❌ Superadmin not found! Please run the native server once to create it.");
-      process.exit(1);
-    }
-
-    // 2. Generate Users
-    console.log(`📦 Generating ${USERS_COUNT} Users...`);
-    const usersToInsert = [];
-    for (let i = 0; i < USERS_COUNT; i++) {
-      const fn = randomChoice(FIRST_NAMES);
-      const ln = randomChoice(LAST_NAMES);
-      usersToInsert.push({
-        fullname: `${fn} ${ln}`,
-        email: `${fn.toLowerCase()}.${ln.toLowerCase()}${i}@demo.com`,
-        password: '$2b$10$YourHashedPasswordHereOrSomethingFast', // dummy hash to save CPU
-        role: randomChoice(['user', 'user', 'user', 'admin']), // mostly users
+    let allUsers = await User.find({});
+    if (allUsers.length === 0) {
+      console.log("⚠️ No users found in database, creating default superadmin user...");
+      let admin = new User({
+        fullname: 'Admin User',
+        username: 'admin',
+        email: 'admin@example.com',
+        password: '$2b$10$YourHashedPasswordHereOrSomethingFast',
+        role: 'superadmin'
       });
+      await admin.save();
+      allUsers = [admin];
     }
-    const insertedUsers = await User.insertMany(usersToInsert);
-    const allUsers = [superAdmin, ...insertedUsers];
-    console.log("✅ Users Generated");
 
     // 2.5 Generate and Upload 5 Dummy Images
     console.log("🖼️ Downloading and uploading 5 dummy images to MinIO...");
