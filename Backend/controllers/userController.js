@@ -1,4 +1,5 @@
 const User = require('../models/userModel');
+const AllowedEmail = require('../models/AllowedEmail');
 const bcrypt = require('bcryptjs');
 
 /**
@@ -175,6 +176,73 @@ exports.deleteBulkUsers = async (req, res) => {
 
     const result = await User.deleteMany({ _id: { $in: ids } });
     res.json({ message: `Successfully deleted ${result.deletedCount} users.` });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * Get all allowed emails
+ */
+exports.getAllowedEmails = async (req, res) => {
+  try {
+    const emails = await AllowedEmail.find().populate('addedBy', 'fullname email').sort({ createdAt: -1 });
+    res.json(emails);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * Bulk add allowed emails
+ */
+exports.addAllowedEmailsBulk = async (req, res) => {
+  try {
+    const { emails } = req.body;
+    if (!emails || typeof emails !== 'string') {
+      return res.status(400).json({ message: 'Please provide a string of emails (comma or newline separated)' });
+    }
+
+    // Split by comma or newline, trim, and filter out empty
+    const emailArray = emails.split(/[\n,]+/).map(e => e.trim().toLowerCase()).filter(e => e);
+    
+    if (emailArray.length === 0) {
+      return res.status(400).json({ message: 'No valid emails found' });
+    }
+
+    let addedCount = 0;
+    let duplicateCount = 0;
+
+    for (const email of emailArray) {
+      try {
+        const existing = await AllowedEmail.findOne({ email });
+        if (!existing) {
+          await AllowedEmail.create({ email, addedBy: req.user._id });
+          addedCount++;
+        } else {
+          duplicateCount++;
+        }
+      } catch (err) {
+        console.error("Error adding allowed email:", err);
+      }
+    }
+
+    res.status(201).json({ 
+      message: `Successfully added ${addedCount} emails. ${duplicateCount > 0 ? `(${duplicateCount} were already allowed)` : ''}`
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * Delete an allowed email
+ */
+exports.deleteAllowedEmail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await AllowedEmail.findByIdAndDelete(id);
+    res.json({ message: 'Email removed from allowlist' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

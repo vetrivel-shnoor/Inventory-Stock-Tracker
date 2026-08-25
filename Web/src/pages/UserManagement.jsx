@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Shield, Trash2, Edit2, UserPlus, User, Loader2 } from 'lucide-react';
+import { Shield, Trash2, Edit2, UserPlus, User, Loader2, ListPlus } from 'lucide-react';
 import { userApi } from '../services/userApi';
 import { Modal } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
@@ -18,6 +18,13 @@ export const UserManagement = () => {
   const [formData, setFormData] = useState({ fullname: '', email: '', password: '', role: 'user' });
   const [editingId, setEditingId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+  
+  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'allowlist'
+  
+  // Allowlist State
+  const [allowedEmails, setAllowedEmails] = useState([]);
+  const [allowlistInput, setAllowlistInput] = useState('');
+  const [loadingAllowlist, setLoadingAllowlist] = useState(false);
 
   const parentRef = useRef(null);
 
@@ -44,6 +51,24 @@ export const UserManagement = () => {
   useEffect(() => {
     fetchUsers(page);
   }, [page, fetchUsers]);
+
+  const fetchAllowlist = async () => {
+    setLoadingAllowlist(true);
+    try {
+      const data = await userApi.getAllowedEmails();
+      setAllowedEmails(data || []);
+    } catch (err) {
+      toast.error('Failed to load allowed emails');
+    } finally {
+      setLoadingAllowlist(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'allowlist') {
+      fetchAllowlist();
+    }
+  }, [activeTab]);
 
   const rowVirtualizer = useVirtualizer({
     count: hasMore ? users.length + 1 : users.length,
@@ -140,6 +165,31 @@ export const UserManagement = () => {
     return `http://localhost:3000${path}`;
   };
 
+  const handleBulkAddEmails = async (e) => {
+    e.preventDefault();
+    if (!allowlistInput.trim()) return toast.error('Please enter at least one email');
+    
+    try {
+      const res = await userApi.addAllowedEmailsBulk(allowlistInput);
+      toast.success(res.message || 'Emails added to allowlist');
+      setAllowlistInput('');
+      fetchAllowlist();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add emails');
+    }
+  };
+
+  const handleDeleteAllowedEmail = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this email from the allowlist?')) return;
+    try {
+      await userApi.deleteAllowedEmail(id);
+      setAllowedEmails(allowedEmails.filter(e => e._id !== id));
+      toast.success('Email removed from allowlist');
+    } catch (err) {
+      toast.error('Failed to remove email');
+    }
+  };
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 h-full flex flex-col">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -170,9 +220,29 @@ export const UserManagement = () => {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b border-[var(--color-border-subtle)] gap-6">
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`pb-3 font-medium transition-colors relative ${activeTab === 'users' ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
+        >
+          Users
+          {activeTab === 'users' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--color-primary)] rounded-t-full" />}
+        </button>
+        <button
+          onClick={() => setActiveTab('allowlist')}
+          className={`pb-3 font-medium transition-colors relative ${activeTab === 'allowlist' ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
+        >
+          Access Control (Allowlist)
+          {activeTab === 'allowlist' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--color-primary)] rounded-t-full" />}
+        </button>
+      </div>
+
       <div className="bg-[var(--color-bg-surface)] backdrop-blur-xl border border-[var(--color-border-subtle)] rounded-xl overflow-hidden shadow-sm flex-1 flex flex-col min-h-0">
         
-        {/* Table Header */}
+        {activeTab === 'users' ? (
+          <>
+            {/* Table Header */}
         <div className="bg-white/10 dark:bg-black/10 border-b border-[var(--color-border-subtle)] backdrop-blur-sm text-[var(--color-text-secondary)] text-sm flex px-4">
           <div className="p-4 font-medium flex-[2]">User</div>
           <div className="p-4 font-medium flex-1">Role</div>
@@ -286,6 +356,79 @@ export const UserManagement = () => {
             </div>
           )}
         </div>
+          </>
+        ) : (
+          <div className="flex flex-col h-full">
+            <div className="p-6 border-b border-[var(--color-border-subtle)] bg-white/5 dark:bg-black/5">
+              <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                <Shield size={20} className="text-[var(--color-primary)]" />
+                Bulk Import Authorized Emails
+              </h2>
+              <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                Enter comma or newline-separated emails. Only users whose emails are listed here (or who are system superadmins) will be able to sign up or log in.
+              </p>
+              
+              <form onSubmit={handleBulkAddEmails} className="flex flex-col gap-3">
+                <textarea
+                  value={allowlistInput}
+                  onChange={(e) => setAllowlistInput(e.target.value)}
+                  placeholder="user1@example.com, user2@example.com&#10;user3@example.com"
+                  className="w-full h-32 px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors text-sm resize-none"
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm"
+                  >
+                    <ListPlus size={18} />
+                    Add Emails
+                  </button>
+                </div>
+              </form>
+            </div>
+            
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-white/10 dark:bg-black/10 backdrop-blur-sm sticky top-0 z-10">
+                  <tr className="text-[var(--color-text-secondary)] text-sm border-b border-[var(--color-border-subtle)]">
+                    <th className="p-4 font-medium">Email</th>
+                    <th className="p-4 font-medium">Added By</th>
+                    <th className="p-4 font-medium">Date Added</th>
+                    <th className="p-4 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loadingAllowlist ? (
+                    <tr><td colSpan="4" className="p-8 text-center text-[var(--color-text-secondary)]">Loading allowlist...</td></tr>
+                  ) : allowedEmails.length === 0 ? (
+                    <tr><td colSpan="4" className="p-8 text-center text-[var(--color-text-secondary)]">No emails in allowlist yet. System is open to all or restricted by ENV.</td></tr>
+                  ) : (
+                    allowedEmails.map(item => (
+                      <tr key={item._id} className="border-b border-[var(--color-border-subtle)] hover:bg-white/10 dark:hover:bg-white/5 transition-colors">
+                        <td className="p-4 font-medium">{item.email}</td>
+                        <td className="p-4 text-sm text-[var(--color-text-secondary)]">
+                          {item.addedBy ? item.addedBy.fullname : 'System'}
+                        </td>
+                        <td className="p-4 text-sm text-[var(--color-text-secondary)]">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleDeleteAllowedEmail(item._id)}
+                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors inline-block"
+                            title="Remove from Allowlist"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal

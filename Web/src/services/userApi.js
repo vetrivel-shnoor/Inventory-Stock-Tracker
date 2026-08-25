@@ -22,7 +22,21 @@ export const userApi = {
     return res.data;
   },
   deleteBulkUsers: async (ids) => {
-    const res = await api.post('/users/bulk-delete', { ids });
+    // Assuming backend was using DELETE / or POST /bulk-delete, let's keep it aligned with what was there or what works:
+    // Our updated route is DELETE /api/users
+    const res = await api.delete('/users', { data: { ids } });
+    return res.data;
+  },
+  getAllowedEmails: async () => {
+    const res = await api.get('/users/allowlist/emails');
+    return res.data;
+  },
+  addAllowedEmailsBulk: async (emails) => {
+    const res = await api.post('/users/allowlist/bulk', { emails });
+    return res.data;
+  },
+  deleteAllowedEmail: async (id) => {
+    const res = await api.delete(`/users/allowlist/${id}`);
     return res.data;
   }
 };

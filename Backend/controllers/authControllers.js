@@ -1,7 +1,9 @@
 const User = require("../models/userModel"); // Check your spelling: userModal vs userModel
 const bcrypt = require("bcryptjs");
 const generateTokenAndSetCookie = require("../utils/generateToken");
+const { isEmailAllowed } = require("../services/authService");
 const userModal = require("../models/userModel");
+const AllowedEmail = require("../models/AllowedEmail");
 
 // ==============================================
 // 1. SIGNUP
@@ -43,6 +45,12 @@ exports.Signup = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // 5.5 Check Allowlist
+    const allowed = await isEmailAllowed(email);
+    if (!allowed) {
+      return res.status(403).json({ message: "Access Denied: Your email is not authorized by an administrator." });
+    }
+
     // 6. Hash & Save
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -54,6 +62,9 @@ exports.Signup = async (req, res) => {
       password: hashedPassword,
       phone,
     });
+
+    // Remove from Allowlist since they are now a registered user
+    await AllowedEmail.findOneAndDelete({ email: email.toLowerCase().trim() });
 
     generateTokenAndSetCookie(res, newUser._id);
 
@@ -81,6 +92,12 @@ exports.Login = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({ message: "Missing fields" });
+    }
+
+    // Check Allowlist
+    const allowed = await isEmailAllowed(email);
+    if (!allowed) {
+      return res.status(403).json({ message: "Access Denied: Your email is not authorized by an administrator." });
     }
 
     const user = await User.findOne({ email });
