@@ -9,6 +9,12 @@ const cacheService = require('../services/cacheService');
 
 /**
  * Get distinct product categories (from Cache or DB if expired).
+ * 
+ * [CACHE WORKFLOW]: 
+ * This heavily relies on `cacheService`. If the Redis cache is warm, 
+ * it skips MongoDB entirely, saving significant DB overhead on the frontend 
+ * where dropdowns frequently request the category list.
+ * 
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  */
@@ -23,6 +29,12 @@ exports.getCategories = async (req, res) => {
 
 /**
  * Get all products with optional filtering (search, category, low stock).
+ * 
+ * [SOFT DELETE EXCLUSION]:
+ * Notice how `isArchived: false` is permanently injected into the query.
+ * This guarantees soft-deleted products never pollute active views while 
+ * preserving historical referential integrity in transactions.
+ * 
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  */

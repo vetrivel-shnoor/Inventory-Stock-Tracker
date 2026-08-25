@@ -16,6 +16,9 @@ import toast from 'react-hot-toast';
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,19 +35,37 @@ export default function Transactions() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (pageNum = 1) => {
+    if (pageNum === 1) setLoading(true);
+    else setLoadingMore(true);
+
     try {
       const [txData, prodData] = await Promise.all([
-        inventoryApi.getTransactions(),
-        inventoryApi.getProducts()
+        inventoryApi.getTransactions({ page: pageNum, limit: 50 }),
+        pageNum === 1 ? inventoryApi.getProducts({ page: 1, limit: 1000 }) : Promise.resolve({ data: products }) // Only fetch products on first load
       ]);
-      setTransactions(txData.transactions || []);
-      setProducts(prodData.data || []);
+      
+      if (pageNum === 1) {
+        setTransactions(txData.transactions || []);
+      } else {
+        setTransactions(prev => [...prev, ...(txData.transactions || [])]);
+      }
+      
+      setHasMore(txData.transactions?.length === 50);
+      if (pageNum === 1) setProducts(prodData.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchData(nextPage);
     }
   };
 
@@ -141,11 +162,11 @@ export default function Transactions() {
                     </td>
                     <td className="p-4">
                       {tx.type === 'IN' ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400 border border-green-500/20">
                           <ArrowDownRight size={14} /> IN
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-red-500/10 text-red-700 dark:bg-red-500/20 dark:text-red-400 border border-red-500/20">
                           <ArrowUpRight size={14} /> OUT
                         </span>
                       )}
@@ -166,6 +187,18 @@ export default function Transactions() {
                 ))}
               </tbody>
             </table>
+            
+            {hasMore && (
+              <div className="flex justify-center p-6 border-t border-[var(--color-border-subtle)]">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="px-6 py-2 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] hover:bg-[var(--color-border-subtle)] transition-colors rounded-xl font-medium text-sm disabled:opacity-50 flex items-center gap-2"
+                >
+                  {loadingMore ? 'Loading...' : 'Load More Transactions'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

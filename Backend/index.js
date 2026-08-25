@@ -36,11 +36,11 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(passport.initialize());
 
-// Rate Limiting setup
+// Rate Limiting setup: Prevents abuse by limiting each IP to 100 requests per 15 minutes.
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  max: 100, // Limit each IP to 100 requests per `window`
   standardHeaders: true, 
   legacyHeaders: false, 
   message: { message: "Too many requests, please try again later." }
@@ -70,7 +70,15 @@ if (!fs.existsSync(uploadDir)) {
   clearDirectory(uploadDir);
 }
 
-// Proxy route for MinIO images (Fallback for local dev without Nginx)
+// -----------------------------------------------------------------------------
+// MINIO IMAGE PROXY (Fallback for Native Local Dev)
+// -----------------------------------------------------------------------------
+// In production (Docker), Nginx intercepts requests to `/public/uploads/` 
+// and proxies them directly to MinIO. 
+// However, when running natively (npm run dev), there is no Nginx.
+// This route acts as a fallback to ensure the backend can fetch the image 
+// from MinIO and stream it to the frontend.
+// Note: Express 5's path-to-regexp v8 parses wildcards as arrays.
 app.get("/public/uploads/*objectName", async (req, res, next) => {
   const objectName = req.params.objectName[0];
   const bucketName = process.env.MINIO_BUCKET_NAME || 'icuman';

@@ -18,7 +18,15 @@ const resolveImageUrl = (imagePath) => {
   const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
   return `${baseUrl}${imagePath}`;
 };
-
+/**
+ * Products Page
+ * 
+ * [PERFORMANCE: INFINITE SCROLL & VIRTUALIZATION]
+ * This component handles massive datasets (10,000+ items) without crashing the browser.
+ * It uses `@tanstack/react-virtual` to only render the items currently visible in the 
+ * viewport (the "sliding window"). As you scroll, DOM nodes are recycled instead of 
+ * creating new ones. This keeps the DOM small, fast, and prevents memory leaks (OOM).
+ */
 export default function Products() {
   const { user } = useApp();
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
