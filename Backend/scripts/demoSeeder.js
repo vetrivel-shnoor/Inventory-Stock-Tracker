@@ -5,6 +5,10 @@ const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
 const AuditLog = require('../models/AuditLog');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const { minioClient, initializeMinio } = require('../config/minio');
 
 // Seed Configuration
 const USERS_COUNT = 100;
@@ -12,14 +16,29 @@ const PRODUCTS_COUNT = 1000;
 const TRANSACTIONS_COUNT = 10000;
 const AUDIT_LOGS_COUNT = 2000;
 
-// Dummy Images for randomization (from previous seed)
-const DUMMY_IMAGES = [
-  '/public/uploads/seed-product-1787652205841-4.jpg',
-  '/public/uploads/seed-product-1787652205393-3.jpg',
-  '/public/uploads/seed-product-1787652204883-2.jpg',
-  '/public/uploads/seed-product-1787652204359-1.jpg',
-  '/public/uploads/seed-product-1787652203664-0.jpg'
-];
+// Dummy Images for randomization (will be populated from MinIO)
+let DUMMY_IMAGES = [];
+
+// Utility to download image
+const downloadImage = (url, filepath) => {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      if (res.statusCode === 302 || res.statusCode === 301) {
+        // Follow redirect for picsum
+        downloadImage(res.headers.location, filepath).then(resolve).catch(reject);
+        return;
+      }
+      const stream = fs.createWriteStream(filepath);
+      res.pipe(stream);
+      stream.on('finish', () => {
+        stream.close();
+        resolve();
+      });
+    }).on('error', (err) => {
+      fs.unlink(filepath, () => reject(err));
+    });
+  });
+};
 
 const CATEGORIES = ['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Automotive', 'Health', 'Beauty', 'Sports', 'Books'];
 const FIRST_NAMES = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica'];
@@ -42,6 +61,8 @@ async function runSeeder() {
     console.log("🌱 Connecting to database...");
     await mongoose.connect(process.env.MONGO_DB);
     console.log("✅ Connected to MongoDB");
+
+    await initializeMinio();
 
     // 1. Clear Database (Keep superadmin)
     console.log("🗑️ Clearing existing data...");
@@ -73,6 +94,28 @@ async function runSeeder() {
     const insertedUsers = await User.insertMany(usersToInsert);
     const allUsers = [superAdmin, ...insertedUsers];
     console.log("✅ Users Generated");
+
+    // 2.5 Generate and Upload 5 Dummy Images
+    console.log("🖼️ Downloading and uploading 5 dummy images to MinIO...");
+    const uploadsDir = path.join(__dirname, '../public/uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    const bucketName = process.env.MINIO_BUCKET_NAME || 'icuman';
+    for (let i = 0; i < 5; i++) {
+      const filename = `seed-product-${Date.now()}-${i}.jpg`;
+      const filepath = path.join(uploadsDir, filename);
+      
+      await downloadImage(`https://picsum.photos/400/400?random=${i}`, filepath);
+      const imageBuffer = fs.readFileSync(filepath);
+      await minioClient.putObject(bucketName, filename, imageBuffer, {
+        'Content-Type': 'image/jpeg'
+      });
+      DUMMY_IMAGES.push(`/public/uploads/${filename}`);
+      fs.unlinkSync(filepath);
+    }
+    console.log("✅ Dummy images uploaded");
 
     // 3. Generate Products
     console.log(`📦 Generating ${PRODUCTS_COUNT} Products...`);

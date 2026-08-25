@@ -105,7 +105,8 @@ export const UserManagement = () => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
       await userApi.deleteUser(id);
-      setUsers(users.filter(u => u._id !== id));
+      fetchUsers(1);
+      setPage(1);
       toast.success('User deleted');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete user');
@@ -113,12 +114,13 @@ export const UserManagement = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} users?`)) return;
+    if (!window.confirm('Are you sure you want to delete selected users?')) return;
     try {
-      await userApi.deleteBulkUsers(selectedIds);
-      setUsers(users.filter(u => !selectedIds.includes(u._id)));
+      await Promise.all(selectedIds.map(id => userApi.deleteUser(id)));
+      fetchUsers(1);
+      setPage(1);
       setSelectedIds([]);
-      toast.success('Users deleted successfully');
+      toast.success('Users deleted');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete users');
     }

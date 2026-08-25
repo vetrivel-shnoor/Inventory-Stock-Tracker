@@ -174,7 +174,8 @@ export default function Products() {
     if (!window.confirm('Are you sure you want to archive this product?')) return;
     try {
       await inventoryApi.deleteProduct(id);
-      setProducts(products.filter(p => p._id !== id));
+      fetchProducts(1);
+      setPage(1);
       toast.success('Product archived');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to archive product');
