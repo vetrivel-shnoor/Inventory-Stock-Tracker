@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowDownRight, ArrowUpRight, Search, Plus, FileText, X } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Search, Plus, FileText, X, ChevronDown, Check } from 'lucide-react';
 import { inventoryApi } from '../services/inventoryApi';
 import { TableSkeleton } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
+import { Modal } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
 
 export default function Transactions() {
@@ -15,6 +16,8 @@ export default function Transactions() {
 
   // Form State
   const [selectedProductId, setSelectedProductId] = useState('');
+  const [productSearch, setProductSearch] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('');
   
@@ -39,6 +42,10 @@ export default function Transactions() {
   };
 
   const selectedProduct = products.find(p => p._id === selectedProductId);
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(productSearch.toLowerCase()) || 
+    p.sku.toLowerCase().includes(productSearch.toLowerCase())
+  );
   const numQuantity = parseInt(quantity) || 0;
   
   let projectedStock = selectedProduct?.currentStock || 0;
@@ -156,41 +163,76 @@ export default function Transactions() {
         )}
       </div>
 
-      {/* Transaction Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[var(--color-bg-surface)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-[var(--color-border-subtle)] flex justify-between items-center bg-[var(--color-bg-base)]">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                {txType === 'IN' ? (
-                  <><ArrowDownRight className="text-green-500" /> Receive Stock (IN)</>
-                ) : (
-                  <><ArrowUpRight className="text-red-500" /> Dispatch Stock (OUT)</>
-                )}
-              </h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-[var(--color-text-secondary)]">
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleTransactionSubmit} className="p-6 space-y-5">
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title={
+          txType === 'IN' ? (
+            <><ArrowDownRight className="text-green-500" /> Receive Stock (IN)</>
+          ) : (
+            <><ArrowUpRight className="text-red-500" /> Dispatch Stock (OUT)</>
+          )
+        }
+      >
+            <form onSubmit={handleTransactionSubmit} className="p-6 space-y-5 overflow-y-visible">
               
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                 <label className="text-sm font-medium">Select Product</label>
-                <div className="relative">
-                  <select
-                    required
-                    value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] transition-colors appearance-none"
-                  >
-                    <option value="" disabled>Choose a product...</option>
-                    {products.map(p => (
-                      <option key={p._id} value={p._id}>{p.name} ({p.sku})</option>
-                    ))}
-                  </select>
-                  <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] pointer-events-none" />
+                <div 
+                  className="relative cursor-pointer"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <div className="w-full px-4 py-2.5 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg flex items-center justify-between">
+                    <span className={selectedProduct ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}>
+                      {selectedProduct ? `${selectedProduct.name} (${selectedProduct.sku})` : 'Choose a product...'}
+                    </span>
+                    <ChevronDown size={18} className="text-[var(--color-text-secondary)]" />
+                  </div>
                 </div>
+
+                {isDropdownOpen && (
+                  <div className="absolute z-[110] mt-1 w-full bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl shadow-lg backdrop-blur-md overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    <div className="p-2 border-b border-[var(--color-border-subtle)]">
+                      <div className="relative">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Search SKU or Name..."
+                          value={productSearch}
+                          onChange={(e) => setProductSearch(e.target.value)}
+                          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking input
+                          className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] text-sm transition-colors"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredProducts.length > 0 ? (
+                        filteredProducts.map(p => (
+                          <div 
+                            key={p._id}
+                            onClick={() => {
+                              setSelectedProductId(p._id);
+                              setIsDropdownOpen(false);
+                              setProductSearch('');
+                            }}
+                            className="px-4 py-3 hover:bg-[var(--color-bg-base)] cursor-pointer flex items-center justify-between transition-colors border-b border-[var(--color-border-subtle)] last:border-0"
+                          >
+                            <div>
+                              <div className="font-medium text-sm text-[var(--color-text-primary)]">{p.name}</div>
+                              <div className="text-xs text-[var(--color-text-secondary)]">{p.sku}</div>
+                            </div>
+                            {selectedProductId === p._id && <Check size={16} className="text-[var(--color-primary)] font-bold" />}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-8 text-center text-sm text-[var(--color-text-secondary)]">
+                          No products found.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedProduct && (
@@ -201,74 +243,59 @@ export default function Transactions() {
                   </div>
                   
                   <div className="flex items-center gap-4">
-                    <div className="flex-1 space-y-1.5">
-                      <label className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Quantity</label>
-                      <input 
-                        type="number" 
-                        required
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Quantity to {txType === 'IN' ? 'Add' : 'Remove'}</label>
+                      <input
+                        type="number"
                         min="1"
+                        required
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
-                        className="w-full px-3 py-2 bg-transparent border-b-2 border-[var(--color-border-subtle)] focus:border-[var(--color-primary)] focus:outline-none text-xl font-bold text-center transition-colors"
-                        placeholder="0"
+                        className="w-full px-3 py-2 bg-transparent border border-[var(--color-border-subtle)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] text-center font-medium"
                       />
                     </div>
-                    
-                    <ArrowDownRight size={24} className="text-[var(--color-border-subtle)] rotate-[-90deg] mt-6" />
-
-                    <div className="flex-1 space-y-1.5 text-right">
-                      <label className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Projected</label>
-                      <div className={`text-xl font-bold pt-2 ${
-                        txType === 'OUT' && projectedStock < 0 ? 'text-red-500' : 
-                        txType === 'IN' && numQuantity > 0 ? 'text-green-500' : ''
-                      }`}>
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Projected Stock</label>
+                      <div className={`px-3 py-2 rounded-lg text-center font-bold border ${projectedStock < 0 ? 'bg-red-50 dark:bg-red-900/10 text-red-500 border-red-200 dark:border-red-800' : 'bg-transparent border-transparent'}`}>
                         {projectedStock}
                       </div>
                     </div>
                   </div>
-
-                  {txType === 'OUT' && projectedStock < 0 && (
-                    <p className="text-xs text-red-500 text-center font-medium">Insufficient stock available!</p>
-                  )}
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Reason / Reference</label>
-                <input 
-                  type="text" 
+                <label className="text-sm font-medium">Reason / Note (Optional)</label>
+                <textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder={txType === 'IN' ? 'e.g. Purchase Order #123' : 'e.g. Retail Sale'}
-                  className="w-full px-4 py-2.5 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                  placeholder={txType === 'IN' ? "e.g. New shipment arrived" : "e.g. Damaged goods, Sale"}
+                  className="w-full px-4 py-3 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none h-20 text-sm"
                 />
               </div>
 
-              <div className="pt-4 border-t border-[var(--color-border-subtle)] flex gap-3">
+              <div className="pt-2 flex justify-end gap-3">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2.5 rounded-lg font-medium hover:bg-[var(--color-bg-base)] transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                  className="px-4 py-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-base)] rounded-lg transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button 
-                  type="submit"
+                  type="submit" 
                   disabled={!isValid}
-                  className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-white transition-all ${
+                  className={`px-6 py-2.5 rounded-lg transition-all font-bold shadow-md ${
                     isValid 
-                      ? (txType === 'IN' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600') 
-                      : 'bg-gray-400 dark:bg-gray-700 cursor-not-allowed opacity-50'
+                    ? (txType === 'IN' ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/20' : 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20')
+                    : 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
                   }`}
                 >
-                  Confirm {txType}
+                  Confirm {txType === 'IN' ? 'IN' : 'OUT'}
                 </button>
               </div>
-
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }

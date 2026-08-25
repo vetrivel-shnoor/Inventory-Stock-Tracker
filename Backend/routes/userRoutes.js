@@ -7,7 +7,8 @@ router.use(protect({ superadmin: true })); // Only superadmins can access these 
 
 router.get('/', userController.getUsers);
 router.post('/', userController.createUser);
-router.put('/:id', userController.updateUserRole);
+router.put('/:id', userController.updateUser);
+router.put('/:id/role', userController.updateUserRole);
 router.delete('/:id', userController.deleteUser);
 
 module.exports = router;

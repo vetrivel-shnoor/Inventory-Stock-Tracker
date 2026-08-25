@@ -10,7 +10,11 @@ export const userApi = {
     return res.data;
   },
   updateUserRole: async (id, role) => {
-    const res = await api.put(`/users/${id}`, { role });
+    const res = await api.put(`/users/${id}/role`, { role });
+    return res.data;
+  },
+  updateUser: async (id, userData) => {
+    const res = await api.put(`/users/${id}`, userData);
     return res.data;
   },
   deleteUser: async (id) => {

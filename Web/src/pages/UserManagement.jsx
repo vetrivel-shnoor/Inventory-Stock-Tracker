@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Trash2, Edit2, UserPlus, Check, X, User } from 'lucide-react';
+import { Shield, Trash2, Edit2, UserPlus, User } from 'lucide-react';
 import { userApi } from '../services/userApi';
+import { Modal } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
 
 export const UserManagement = () => {
@@ -47,17 +48,40 @@ export const UserManagement = () => {
     }
   };
 
-  const handleCreate = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const newUser = await userApi.createUser(formData);
-      setUsers([...users, newUser]);
+      if (editingId) {
+        // Only send password if it's not empty
+        const updateData = { ...formData };
+        if (!updateData.password) delete updateData.password;
+        
+        const updatedUser = await userApi.updateUser(editingId, updateData);
+        setUsers(users.map(u => u._id === editingId ? updatedUser : u));
+        toast.success('User updated successfully');
+      } else {
+        const newUser = await userApi.createUser(formData);
+        setUsers([...users, newUser]);
+        toast.success('User created successfully');
+      }
       setIsModalOpen(false);
+      setEditingId(null);
       setFormData({ fullname: '', email: '', password: '', role: 'user' });
-      toast.success('User created successfully');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create user');
+      toast.error(err.response?.data?.message || `Failed to ${editingId ? 'update' : 'create'} user`);
     }
+  };
+
+  const openAddModal = () => {
+    setEditingId(null);
+    setFormData({ fullname: '', email: '', password: '', role: 'user' });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (user) => {
+    setEditingId(user._id);
+    setFormData({ fullname: user.fullname, email: user.email, password: '', role: user.role });
+    setIsModalOpen(true);
   };
 
   const getImageUrl = (path) => {
@@ -79,8 +103,8 @@ export const UserManagement = () => {
           <p className="text-[var(--color-text-secondary)] text-sm">Manage system access and roles</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors"
+          onClick={openAddModal}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-md"
         >
           <UserPlus size={18} />
           <span>Add User</span>
@@ -137,13 +161,22 @@ export const UserManagement = () => {
                   </td>
                   <td className="p-4 text-right">
                     {u.role !== 'superadmin' && (
-                      <button
-                        onClick={() => handleDelete(u._id)}
-                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Delete User"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => openEditModal(u)}
+                          className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
+                          title="Edit User"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(u._id)}
+                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Delete User"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -153,43 +186,42 @@ export const UserManagement = () => {
         </div>
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-[var(--color-bg-surface)] rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-[var(--color-border-subtle)]">
-            <div className="flex items-center justify-between p-6 border-b border-[var(--color-border-subtle)]">
-              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Add New User</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Full Name</label>
-                <input required type="text" value={formData.fullname} onChange={(e) => setFormData({...formData, fullname: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="John Doe" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
-                <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="john@example.com" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Password</label>
-                <input required type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="••••••••" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Role</label>
-                <select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors">
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div className="pt-4 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-base)] rounded-lg transition-colors font-medium">Cancel</button>
-                <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors font-medium shadow-md">Create User</button>
-              </div>
-            </form>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingId ? "Edit User" : "Add New User"}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Full Name</label>
+            <input required type="text" value={formData.fullname} onChange={(e) => setFormData({...formData, fullname: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="John Doe" />
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
+            <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="john@example.com" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              Password {editingId && <span className="font-normal text-xs">(Leave blank to keep unchanged)</span>}
+            </label>
+            <input required={!editingId} type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="••••••••" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Role</label>
+            <select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} className="w-full p-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors appearance-none">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div className="pt-4 flex justify-end gap-3">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-base)] rounded-lg transition-colors font-medium">Cancel</button>
+            <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors font-medium shadow-md">
+              {editingId ? 'Save Changes' : 'Create User'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { Search, Filter, LayoutGrid, List, Plus, Edit2, Trash2,Package } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Search, Filter, LayoutGrid, List, Plus, Edit2, Trash2, Package, Upload } from 'lucide-react';
 import { inventoryApi } from '../services/inventoryApi';
 import { CardSkeleton, TableSkeleton } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
+import { Modal } from '../components/ui/Modal';
 import { useApp } from '../context/Appcontext';
 import toast from 'react-hot-toast';
 
 export default function Products() {
   const { user } = useApp();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,8 +20,11 @@ export default function Products() {
   const [category, setCategory] = useState('');
   const [showLowStock, setShowLowStock] = useState(false);
 
-  // Modals state (UI only for now, logic can be wired later)
+  // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ name: '', sku: '', category: '', price: '', initialStock: '', lowStockThreshold: '', image: null });
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchProducts();
@@ -55,6 +59,61 @@ export default function Products() {
     return { color: 'bg-green-500', label: 'Healthy' };
   };
 
+  const handleOpenAdd = () => {
+    setEditingId(null);
+    setFormData({ name: '', sku: '', category: '', price: '', initialStock: '', lowStockThreshold: '10', image: null });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (product) => {
+    setEditingId(product._id);
+    setFormData({ 
+      name: product.name, 
+      sku: product.sku, 
+      category: product.category, 
+      price: product.price, 
+      lowStockThreshold: product.lowStockThreshold,
+      image: null 
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this product? All related transactions will also be deleted.')) return;
+    try {
+      await inventoryApi.deleteProduct(id);
+      setProducts(products.filter(p => p._id !== id));
+      toast.success('Product deleted');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete product');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const data = new FormData();
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== null && formData[key] !== '') {
+          data.append(key, formData[key]);
+        }
+      });
+
+      if (editingId) {
+        const updated = await inventoryApi.updateProduct(editingId, data);
+        setProducts(products.map(p => p._id === editingId ? updated : p));
+        toast.success('Product updated');
+      } else {
+        const newProduct = await inventoryApi.createProduct(data);
+        setProducts([newProduct, ...products]);
+        toast.success('Product added');
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || `Failed to ${editingId ? 'update' : 'add'} product`);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 h-full flex flex-col">
       {/* Header & Actions */}
@@ -62,7 +121,7 @@ export default function Products() {
         <h1 className="text-2xl font-bold tracking-tight">Product Catalog</h1>
         {isAdmin && (
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenAdd}
             className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-tr from-blue-600/80 to-indigo-400/80 backdrop-blur-md border border-blue-500/30 text-white rounded-xl hover:shadow-[0_8px_25px_-4px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 transition-all duration-300 font-semibold shadow-sm"
           >
             <Plus size={18} />
@@ -161,6 +220,16 @@ export default function Products() {
                     <div className="absolute top-3 left-3 px-2 py-1 bg-white/90 dark:bg-black/80 backdrop-blur text-xs font-semibold rounded shadow-sm">
                       {product.sku}
                     </div>
+                    {isAdmin && (
+                      <div className="absolute top-3 right-3 flex gap-1 bg-white/90 dark:bg-black/80 backdrop-blur rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleOpenEdit(product)} className="p-1.5 text-[var(--color-text-secondary)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors" title="Edit Product">
+                          <Edit2 size={14} />
+                        </button>
+                        <button onClick={() => handleDelete(product._id)} className="p-1.5 text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Delete Product">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="p-4 flex-1 flex flex-col">
@@ -225,10 +294,10 @@ export default function Products() {
                         {isAdmin && (
                           <td className="p-4 text-right">
                             <div className="flex justify-end gap-2">
-                              <button className="p-2 text-[var(--color-text-secondary)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">
+                              <button onClick={() => handleOpenEdit(product)} className="p-2 text-[var(--color-text-secondary)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">
                                 <Edit2 size={16} />
                               </button>
-                              <button className="p-2 text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors">
+                              <button onClick={() => handleDelete(product._id)} className="p-2 text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors">
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -244,27 +313,84 @@ export default function Products() {
         )}
       </div>
 
-      {/* Admin Action Modal Placeholder */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[var(--color-bg-surface)] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-[var(--color-border-subtle)] flex justify-between items-center">
-              <h2 className="text-xl font-bold">Add New Product</h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-[var(--color-bg-base)] rounded-full transition-colors text-[var(--color-text-secondary)]">
-                <Filter size={20} className="rotate-45" /> {/* Using Filter as X for now since X isn't imported, wait, let me use standard HTML X or import X */}
-                <span className="sr-only">Close</span>
-              </button>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingId ? "Edit Product" : "Add New Product"}
+        maxWidth="max-w-xl"
+      >
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Product Name</label>
+              <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-2.5 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="Premium Widget" />
             </div>
-            <div className="p-6">
-              <p className="text-[var(--color-text-secondary)] mb-4">Modal UI placeholder. You can wire this to the API next!</p>
-              <div className="flex justify-end gap-3 mt-8">
-                <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg font-medium hover:bg-[var(--color-bg-base)] transition-colors">Cancel</button>
-                <button onClick={() => { setIsModalOpen(false); toast.success('Product functionality wired soon!'); }} className="px-4 py-2 rounded-lg font-medium bg-[var(--color-primary)] text-white hover:opacity-90 transition-opacity">Save Product</button>
-              </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)]">SKU</label>
+              <input required={!editingId} disabled={!!editingId} type="text" value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="w-full p-2.5 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors disabled:opacity-50" placeholder="SKU-123" />
             </div>
           </div>
-        </div>
-      )}
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Category</label>
+              <select required value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-2.5 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors appearance-none">
+                <option value="">Select Category</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Food">Food</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Price (₹)</label>
+              <input required type="number" step="0.01" min="0" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-2.5 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="99.99" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {!editingId && (
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Initial Stock</label>
+                <input type="number" min="0" value={formData.initialStock} onChange={(e) => setFormData({...formData, initialStock: e.target.value})} className="w-full p-2.5 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="0" />
+              </div>
+            )}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Low Stock Threshold</label>
+              <input required type="number" min="0" value={formData.lowStockThreshold} onChange={(e) => setFormData({...formData, lowStockThreshold: e.target.value})} className="w-full p-2.5 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors" placeholder="10" />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Product Image (Optional)</label>
+            <div className="flex items-center gap-4">
+              <button 
+                type="button" 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 border border-[var(--color-border-subtle)] rounded-lg hover:bg-[var(--color-bg-base)] transition-colors text-sm font-medium"
+              >
+                <Upload size={16} /> Choose Image
+              </button>
+              <span className="text-xs text-[var(--color-text-secondary)] truncate">
+                {formData.image ? formData.image.name : 'No file chosen'}
+              </span>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={(e) => setFormData({...formData, image: e.target.files[0]})}
+                className="hidden" 
+                accept="image/*"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3 border-t border-[var(--color-border-subtle)] mt-6">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-base)] rounded-lg transition-colors font-medium">Cancel</button>
+            <button type="submit" className="px-6 py-2.5 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors font-medium shadow-md">
+              {editingId ? 'Save Changes' : 'Create Product'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

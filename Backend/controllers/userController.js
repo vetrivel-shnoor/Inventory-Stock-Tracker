@@ -60,6 +60,37 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fullname, email, password, role } = req.body;
+
+    const targetUser = await User.findById(id);
+    if (!targetUser) return res.status(404).json({ message: 'User not found' });
+
+    if (targetUser.role === 'superadmin' && req.user && req.user._id.toString() !== id) {
+       return res.status(403).json({ message: 'Cannot modify other superadmins' });
+    }
+
+    if (fullname) targetUser.fullname = fullname;
+    if (email) targetUser.email = email;
+    if (role && targetUser.role !== 'superadmin') targetUser.role = role;
+
+    if (password) {
+      targetUser.password = await bcrypt.hash(password, 10);
+    }
+
+    await targetUser.save();
+    
+    const userToReturn = targetUser.toObject();
+    delete userToReturn.password;
+    
+    res.json(userToReturn);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;

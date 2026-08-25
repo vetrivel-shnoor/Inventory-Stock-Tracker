@@ -1,5 +1,6 @@
 const Transaction = require('../models/Transaction');
 const Product = require('../models/Product');
+const User = require('../models/userModel');
 const mongoose = require('mongoose');
 
 exports.createTransaction = async (req, res) => {
@@ -76,6 +77,12 @@ exports.getTransactions = async (req, res) => {
     }
     if (req.query.type) {
       query.type = req.query.type;
+    }
+
+    if (req.user && req.user.role !== 'superadmin') {
+      const superAdmins = await User.find({ role: 'superadmin' }).select('_id');
+      const superAdminIds = superAdmins.map(admin => admin._id);
+      query.performedBy = { $nin: superAdminIds };
     }
 
     const transactions = await Transaction.find(query)
