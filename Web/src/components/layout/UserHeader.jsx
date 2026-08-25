@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useApp } from "../../context/Appcontext";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const UserHeader = ({ theme }) => {
   const { user } = useApp();
@@ -14,7 +13,8 @@ const UserHeader = ({ theme }) => {
   const getImageUrl = (path) => {
     if (!path) return null;
     if (path.startsWith("http") || path.startsWith("blob:")) return path;
-    return `${API_BASE_URL}${path}`;
+    const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
+    return `${baseUrl}${path}`;
   };
 
   const profileSrc = getImageUrl(user?.profilePicture);

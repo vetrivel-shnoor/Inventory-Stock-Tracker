@@ -40,7 +40,7 @@ export default function Transactions() {
         inventoryApi.getProducts()
       ]);
       setTransactions(txData.transactions || []);
-      setProducts(prodData || []);
+      setProducts(prodData.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {

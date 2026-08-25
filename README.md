@@ -13,6 +13,7 @@ The application is built on a scalable, microservices-ready architecture:
 - **Styling**: Tailwind CSS (with custom CSS variables for full glassmorphism, dynamic gradients, and backdrop blurs)
 - **State Management**: React Context API (`Appcontext` and `ThemeContext`)
 - **Routing**: React Router DOM (protected routes based on user roles)
+- **Performance**: Implementation of `@tanstack/react-virtual` for infinitely scrolling UI components (Table & Grid) to prevent OOM errors with large datasets. `react-select/creatable` for debounced fluid search.
 - **Key Features**: 
   - Responsive Dashboard with Recharts
   - Complete Product CRUD with image uploads
@@ -22,10 +23,66 @@ The application is built on a scalable, microservices-ready architecture:
 ### 2. Backend (API)
 - **Framework**: Node.js & Express.js
 - **Database**: MongoDB (using Mongoose for object modeling and transactions)
+- **Caching**: Redis-backed caching strategies for high-frequency endpoints (`/categories`).
 - **Authentication**: JWT (JSON Web Tokens) with HttpOnly cookies for security, and Bcrypt for password hashing.
 - **Role-Based Access Control (RBAC)**: Middleware enforcing `user`, `admin`, and `superadmin` privileges.
 - **Media Storage**: MinIO (S3-compatible object storage) for hosting product and profile images. Fallback to local file system if disabled.
 - **Background Jobs**: BullMQ backed by Redis for asynchronous image processing (resizing, optimizing) to prevent blocking the main thread during heavy uploads.
+
+---
+
+## 🗄 Entity Relationship & Data Model (ERD)
+
+The system relies on a closely coupled data model using MongoDB references and soft deletion to preserve financial audit history.
+
+```mermaid
+erDiagram
+    User ||--o{ Product : creates
+    User ||--o{ Transaction : performs
+    User ||--o{ AuditLog : triggers
+    Product ||--o{ Transaction : "is tracked by"
+    Product ||--o{ AuditLog : "is audited by"
+
+    User {
+        ObjectId _id
+        String fullname
+        String email
+        String role "user | admin | superadmin"
+    }
+    Product {
+        ObjectId _id
+        String name
+        String sku
+        String category
+        Number price
+        Number currentStock
+        Boolean isArchived "Soft delete flag"
+    }
+    Transaction {
+        ObjectId _id
+        ObjectId product "Ref Product"
+        String type "IN | OUT"
+        Number quantity
+        Number totalValue
+    }
+    AuditLog {
+        ObjectId _id
+        String action "PRODUCT_CREATED | PRODUCT_ARCHIVED"
+        ObjectId entityId "Ref Product"
+        ObjectId performedBy "Ref User"
+        Object details
+    }
+```
+
+---
+
+## ⚡ Caching & Performance Strategies
+
+To ensure the application performs optimally even with tens of thousands of products:
+1. **Redis Category Cache**: A dedicated `cacheService.js` automatically fetches all unique categories from the database and loads them into a Redis cache on server startup. It enforces a 1-hour TTL.
+2. **Cache Invalidation**: Whenever an Admin creates or updates a product, the backend invalidates the Redis `categories_cache` ensuring the next request re-syncs the dropdowns instantly.
+3. **Backend Pagination**: The `/api/products` and `/api/users` endpoints enforce page and limit caps directly at the MongoDB layer (`.skip().limit()`), preventing massive data dumps.
+4. **Frontend Virtualization**: We utilize a sliding window approach (`@tanstack/react-virtual`). The DOM only renders the specific ~15 items currently visible on the screen. As you scroll, the nodes are recycled, yielding zero UI lag and no OOM crashes.
 
 ---
 
@@ -71,9 +128,8 @@ The easiest way to run the entire stack (MongoDB, Redis, MinIO, Backend, and Fro
    docker-compose up -d --build
    ```
 3. **Access the Apps**:
-   - Frontend: `http://localhost:5173`
-   - Backend API: `http://localhost:3000`
-   - MinIO Console: `http://localhost:9001`
+   - Single Entry Point (Nginx API Gateway): `http://localhost:3010`
+   *(All internal services like Backend API and MinIO are intentionally blocked from host access for security)*
 4. **Initial Login**:
    - Use the default superadmin credentials defined in `docker-compose.yml` or your `.env`.
 

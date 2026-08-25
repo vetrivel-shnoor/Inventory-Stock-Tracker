@@ -136,13 +136,8 @@ const worker = new Worker(
 
       console.log(`[Worker] ✅ Uploaded: ${(imageBuffer.length / 1024).toFixed(2)} KB`);
 
-      // 3. Generate URL
-      const endpoint = process.env.MINIO_ENDPOINT || '127.0.0.1';
-      const port = process.env.MINIO_PORT || 9000;
-      const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
-      
-      // Use localhost instead of 127.0.0.1 for browser compatibility if needed, or exact endpoint
-      const fileUrl = `${protocol}://${endpoint}:${port}/${bucketName}/${finalFilename}`;
+      // 3. Generate Path
+      const fileUrl = `/public/uploads/${finalFilename}`;
 
       // 4. Update Database & Cleanup Old Avatar
       await updateDatabase(

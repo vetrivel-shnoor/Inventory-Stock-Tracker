@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Home, Package, Activity, LogOut, Menu, X, Sun, Moon, Settings, Users } from 'lucide-react';
+import { Home, Package, Activity, LogOut, Menu, X, Sun, Moon, Settings, Users, ShieldAlert } from 'lucide-react';
 import { useApp } from '../../context/Appcontext';
 import { ThemeContext } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
@@ -15,10 +15,11 @@ const AvatarImage = ({ user }) => {
   const [blobLoaded, setBlobLoaded] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
 
+  const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
   const profileSrc = user?.profilePicture?.startsWith('http') 
     ? user.profilePicture 
     : user?.profilePicture 
-      ? `http://localhost:3000${user.profilePicture}` 
+      ? `${baseUrl}${user.profilePicture}` 
       : null;
       
   const isDirectUrl = profileSrc?.startsWith("http") && !profileSrc.includes("localhost");
@@ -99,7 +100,10 @@ export const DashboardLayout = () => {
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Products', path: '/products', icon: Package },
     { name: 'Transactions', path: '/transactions', icon: Activity },
-    ...(user?.role === 'superadmin' ? [{ name: 'Users', path: '/users', icon: Users }] : []),
+    ...(user?.role === 'superadmin' ? [
+      { name: 'Users', path: '/users', icon: Users },
+      { name: 'Audit Logs', path: '/audit-logs', icon: ShieldAlert }
+    ] : []),
     { name: 'Profile', path: '/profile', icon: Settings },
   ];
 

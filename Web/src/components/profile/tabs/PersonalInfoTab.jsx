@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { MOCK_USER_META } from "../constants";
 import GoogleIcon from "../../GoogleIcon";
-import Modal from "@/components/layout/Modal";
+import { Modal } from "@/components/ui/Modal";
 import { UpdatePersonalInfo } from "../../../services/profileApi";
 
 // 1. Country Codes Configuration

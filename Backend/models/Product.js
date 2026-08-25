@@ -34,6 +34,11 @@ const productSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+  },
+  isArchived: {
+    type: Boolean,
+    default: false,
+    index: true,
   }
 }, { timestamps: true });
 

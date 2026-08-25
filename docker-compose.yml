@@ -4,8 +4,6 @@ services:
   mongodb:
     image: mongo:6
     container_name: stocktracker_mongodb
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
@@ -13,8 +11,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: stocktracker_redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -22,9 +18,6 @@ services:
   minio:
     image: minio/minio
     container_name: stocktracker_minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password123
@@ -38,8 +31,8 @@ services:
       context: ./Backend
       dockerfile: Dockerfile
     container_name: stocktracker_backend
-    ports:
-      - "3000:3000"
+    volumes:
+      - backend_uploads:/app/public/uploads
     environment:
       - PORT=3000
       - NODE_ENV=production
@@ -71,10 +64,10 @@ services:
       dockerfile: Dockerfile
       # Providing build args if needed by Vite
       args:
-        - VITE_API_URL=http://localhost:3000
+        - VITE_API_URL=/api
     container_name: stocktracker_frontend
     ports:
-      - "5173:80" # Map 5173 to Nginx 80 to avoid breaking user's expectation
+      - "3010:80" # Nginx Gateway
     depends_on:
       - backend
     restart: unless-stopped
@@ -83,3 +76,4 @@ volumes:
   mongodb_data:
   redis_data:
   minio_data:
+  backend_uploads:

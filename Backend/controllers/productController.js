@@ -1,9 +1,25 @@
 const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
+const AuditLog = require('../models/AuditLog');
 const mongoose = require('mongoose');
 const { mediaQueue } = require('../services/queue');
 const fs = require('fs');
 const path = require('path');
+const cacheService = require('../services/cacheService');
+
+/**
+ * Get distinct product categories (from Cache or DB if expired).
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await cacheService.getCategories();
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 
 /**
  * Get all products with optional filtering (search, category, low stock).
@@ -13,7 +29,7 @@ const path = require('path');
 exports.getProducts = async (req, res) => {
   try {
     const { search, category, lowStock } = req.query;
-    let query = {};
+    let query = { isArchived: false };
 
     if (search) {
       query.$or = [
@@ -30,8 +46,21 @@ exports.getProducts = async (req, res) => {
       query.$expr = { $lte: ['$currentStock', '$lowStockThreshold'] };
     }
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
-    res.json(products);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      Product.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Product.countDocuments(query)
+    ]);
+    
+    res.json({
+      data: products,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -122,10 +151,27 @@ exports.createProduct = async (req, res) => {
       });
     }
 
+    // Invalidate categories cache to ensure the new category is picked up
+    await cacheService.invalidateCategories();
+
+    // Audit Log
+    if (req.user) {
+      await AuditLog.create({
+        action: 'PRODUCT_CREATED',
+        entity: 'PRODUCT',
+        entityId: product._id,
+        performedBy: req.user._id,
+        details: { sku, name, initialStock }
+      });
+    }
+
     res.status(201).json(product);
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.sku) {
+      return res.status(400).json({ message: 'A product with this SKU already exists' });
+    }
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -161,8 +207,27 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
+    // Invalidate cache in case a category was changed/added
+    if (category) {
+      await cacheService.invalidateCategories();
+    }
+
+    // Audit Log
+    if (req.user) {
+      await AuditLog.create({
+        action: 'PRODUCT_UPDATED',
+        entity: 'PRODUCT',
+        entityId: product._id,
+        performedBy: req.user._id,
+        details: updateData
+      });
+    }
+
     res.json(product);
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.sku) {
+      return res.status(400).json({ message: 'A product with this SKU already exists' });
+    }
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -174,26 +239,57 @@ exports.updateProduct = async (req, res) => {
  * @param {Object} res - Express response object.
  */
 exports.deleteProduct = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
-    const product = await Product.findById(req.params.id).session(session);
-    if (!product) {
-      await session.abortTransaction();
-      session.endSession();
+    const product = await Product.findById(req.params.id);
+    if (!product || product.isArchived) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    await Transaction.deleteMany({ product: product._id }).session(session);
-    await Product.findByIdAndDelete(product._id).session(session);
+    product.isArchived = true;
+    await product.save();
 
-    await session.commitTransaction();
-    session.endSession();
+    if (req.user) {
+      await AuditLog.create({
+        action: 'PRODUCT_ARCHIVED',
+        entity: 'PRODUCT',
+        entityId: product._id,
+        performedBy: req.user._id,
+        details: { sku: product.sku }
+      });
+    }
 
-    res.json({ message: 'Product and related transactions deleted successfully' });
+    res.json({ message: 'Product archived successfully' });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * Bulk delete products by an array of IDs.
+ */
+exports.deleteBulkProducts = async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'Provide an array of product IDs' });
+  }
+
+  try {
+    const result = await Product.updateMany(
+      { _id: { $in: ids } }, 
+      { isArchived: true }
+    );
+
+    if (req.user) {
+      await AuditLog.create({
+        action: 'PRODUCT_BULK_ARCHIVED',
+        entity: 'PRODUCT',
+        performedBy: req.user._id,
+        details: { archivedCount: result.modifiedCount, ids }
+      });
+    }
+
+    res.json({ message: `Successfully archived ${result.modifiedCount} products.` });
+  } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

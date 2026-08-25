@@ -26,6 +26,7 @@ import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Transactions from "./pages/Transactions";
 import { UserManagement } from "./pages/UserManagement";
+import AuditLogs from "./pages/AuditLogs";
 // import GoogleOneTap from "./components/GoogleOneTap";
 
 function App() {
@@ -79,6 +80,10 @@ function App() {
           <Route 
             path="/users" 
             element={user?.role === 'superadmin' ? <UserManagement /> : <Navigate to="/dashboard" replace />} 
+          />
+          <Route 
+            path="/audit-logs" 
+            element={user?.role === 'superadmin' ? <AuditLogs /> : <Navigate to="/dashboard" replace />} 
           />
           <Route
             path="/profile"

@@ -9,8 +9,21 @@ const bcrypt = require('bcryptjs');
  */
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find().select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      User.countDocuments()
+    ]);
+
+    res.json({
+      data: users,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -136,6 +149,32 @@ exports.deleteUser = async (req, res) => {
 
     await User.findByIdAndDelete(id);
     res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * Bulk delete users by an array of IDs.
+ * Contains safety checks to prevent deleting superadmins.
+ */
+exports.deleteBulkUsers = async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'Provide an array of user IDs' });
+  }
+
+  try {
+    // Find all target users to check if any are superadmins
+    const targetUsers = await User.find({ _id: { $in: ids } });
+    const hasSuperadmin = targetUsers.some(u => u.role === 'superadmin');
+
+    if (hasSuperadmin) {
+      return res.status(403).json({ message: 'Cannot bulk delete superadmins. Operation aborted.' });
+    }
+
+    const result = await User.deleteMany({ _id: { $in: ids } });
+    res.json({ message: `Successfully deleted ${result.deletedCount} users.` });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

@@ -26,7 +26,7 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' 
           </button>
         </div>
         
-        <div className="overflow-y-visible flex-1">
+        <div className="overflow-y-visible flex-1 p-5">
           {children}
         </div>
       </div>

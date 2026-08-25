@@ -12,8 +12,20 @@ export default defineConfig({
       "@components": path.resolve(__dirname, "src/components"),
       "@context": path.resolve(__dirname, "src/context"),
       // "@hooks": path.resolve(__dirname, "src/hooks"),
-      // "@layout": path.resolve(__dirname, "src/components/layout"),
       "@pages": path.resolve(__dirname, "src/pages"),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/public/uploads': {
+        target: 'http://localhost:9000/icuman',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/public\/uploads/, ''),
+      }
+    }
+  }
 });

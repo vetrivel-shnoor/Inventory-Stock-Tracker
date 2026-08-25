@@ -1,8 +1,8 @@
 import api from './api';
 
 export const userApi = {
-  getUsers: async () => {
-    const res = await api.get('/users');
+  getUsers: async (params) => {
+    const res = await api.get('/users', { params });
     return res.data;
   },
   createUser: async (userData) => {
@@ -19,6 +19,10 @@ export const userApi = {
   },
   deleteUser: async (id) => {
     const res = await api.delete(`/users/${id}`);
+    return res.data;
+  },
+  deleteBulkUsers: async (ids) => {
+    const res = await api.post('/users/bulk-delete', { ids });
     return res.data;
   }
 };

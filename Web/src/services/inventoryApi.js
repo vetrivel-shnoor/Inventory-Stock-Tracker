@@ -26,6 +26,14 @@ export const inventoryApi = {
     const res = await api.delete(`/products/${id}`);
     return res.data;
   },
+  deleteBulkProducts: async (ids) => {
+    const res = await api.post('/products/bulk-delete', { ids });
+    return res.data;
+  },
+  getCategories: async () => {
+    const res = await api.get('/products/meta/categories');
+    return res.data;
+  },
 
   // Transactions
   getTransactions: async (params) => {

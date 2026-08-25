@@ -12,7 +12,7 @@ import { uploadProfileImage } from "../services/profileApi";
 import { logout, checkAuth } from "../services/authApi";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import Modal from "../components/layout/Modal";
+import { Modal } from "../components/ui/Modal";
 import toast from "react-hot-toast";
 
 // Import Components

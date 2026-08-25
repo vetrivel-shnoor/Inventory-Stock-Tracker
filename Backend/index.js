@@ -70,7 +70,21 @@ if (!fs.existsSync(uploadDir)) {
   clearDirectory(uploadDir);
 }
 
-app.use("/public/uploads", express.static(path.join(__dirname, "public/uploads")));
+// Proxy route for MinIO images (Fallback for local dev without Nginx)
+app.get("/public/uploads/*objectName", async (req, res, next) => {
+  const objectName = req.params.objectName[0];
+  const bucketName = process.env.MINIO_BUCKET_NAME || 'icuman';
+  
+  try {
+    const { minioClient } = require("./config/minio");
+    const stream = await minioClient.getObject(bucketName, objectName);
+    stream.pipe(res);
+  } catch (err) {
+    if (err.code === 'NoSuchKey') return res.status(404).send('Not found');
+    next();
+  }
+});
+
 const port = process.env.PORT || 3000;
 
 // Bootstrap app with all DBs
@@ -79,6 +93,10 @@ const port = process.env.PORT || 3000;
     await Promise.all([connectMongo()]);
     const seedSuperAdmin = require("./scripts/seedAdmin");
     await seedSuperAdmin();
+    
+    // Load categories cache
+    const cacheService = require("./services/cacheService");
+    await cacheService.loadCategoriesCache();
 
     // register routes
     app.use("/api", require("./routes/index"));
