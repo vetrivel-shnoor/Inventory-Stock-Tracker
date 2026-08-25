@@ -1,5 +1,9 @@
 # Inventory & Stock Tracker
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-https%3A%2F%2Finventory.cyberanzen.icu-brightgreen?style=for-the-badge&logo=cloudflare)](https://inventory.cyberanzen.icu/)
+
+**🌐 Live Site**: [https://inventory.cyberanzen.icu/](https://inventory.cyberanzen.icu/)
+
 A comprehensive, full-stack Inventory and Stock Tracking system built with the MERN stack. It features a modern, glassmorphic UI, robust role-based access control, a background job queue for processing images, and secure local file storage using MinIO.
 
 ---

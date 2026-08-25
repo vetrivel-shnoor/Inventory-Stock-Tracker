@@ -46,11 +46,17 @@ api.interceptors.response.use(
 
     // C. Handle specific status codes
     if (status === 401) {
-      toast.error(backendMessage);
+      // Make 401 unauthenticated toast silent (especially "Not authorized, no token" or on auth pages)
+      const isAuthPage = window.location.pathname === "/login" || window.location.pathname === "/signup";
+      const isGenericNoTokenMsg = backendMessage === "Not authorized, no token";
+      
+      if (!isAuthPage && !isGenericNoTokenMsg) {
+        toast.error(backendMessage);
+      }
 
       setTimeout(() => {
         // Prevent redirect loop if already on login page
-        if (window.location.pathname !== "/login") {
+        if (window.location.pathname !== "/login" && window.location.pathname !== "/signup") {
           window.location.href = "/login";
         }
       }, 1000);
