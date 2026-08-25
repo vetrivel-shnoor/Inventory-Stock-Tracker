@@ -124,9 +124,23 @@ exports.Logout = (req, res) => {
 // 4. ME (Check Auth Status)
 // ==============================================
 exports.Me = async (req, res) => {
-  const user = await userModal
-    .findById(req.user._id)
-    .select("-password -__v -updatedAt");
+  let user = await userModal.findById(req.user._id).select("-password -__v -updatedAt");
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  // Auto-sync superadmin privileges based on env
+  const superAdminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+  const isSuperAdminEmail = superAdminEmails.includes(user.email.toLowerCase());
+
+  if (isSuperAdminEmail && user.role !== "superadmin") {
+    user.role = "superadmin";
+    await user.save();
+  } else if (!isSuperAdminEmail && user.role === "superadmin") {
+    user.role = "user";
+    await user.save();
+  }
 
   res.status(200).json({
     success: true,

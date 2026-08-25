@@ -16,7 +16,7 @@ const UserSchema = new Schema(
 
     createdAt: { type: Date, default: Date.now },
     profilePicture: String,
-    role: { type: String, default: "user", enum: ["admin", "user"] },
+    role: { type: String, default: "user", enum: ["superadmin", "admin", "user"] },
   },
   {
     timestamps: true,

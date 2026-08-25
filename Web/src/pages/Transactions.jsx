@@ -141,9 +141,9 @@ export default function Transactions() {
                         {tx.type === 'IN' ? '+' : '-'}{tx.quantity}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-right font-medium">
+                    <td className="p-4 text-sm text-right font-semibold">
                       ₹{(tx.totalValue || 0).toFixed(2)}
-                      <div className="text-[10px] text-[var(--color-text-secondary)] font-normal">@ ₹{tx.unitPrice?.toFixed(2)}</div>
+                      <div className="text-xs text-[var(--color-text-secondary)] font-medium">@ ₹{tx.unitPrice?.toFixed(2)}</div>
                     </td>
                     <td className="p-4 text-sm text-[var(--color-text-secondary)]">
                       {tx.performedBy?.name || 'System'}

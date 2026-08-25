@@ -4,7 +4,7 @@ const generateTokenAndSetCookie = require("../utils/generateToken");
 
 // 1. Change function signature to accept options (default is empty object)
 const protect =
-  ({ admin = false } = {}) =>
+  ({ admin = false, superadmin = false } = {}) =>
   async (req, res, next) => {
     try {
       // 2. Read token from cookie
@@ -25,13 +25,14 @@ const protect =
       }
 
       // ============================================================
-      // 5. ADMIN CHECK (New Logic)
+      // 5. ADMIN / SUPERADMIN CHECK (New Logic)
       // ============================================================
-      // If admin:true was passed, check if the user's role is 'admin'
-      // Note: Ensure your database field is actually named 'role'.
-      // If it is 'userRole', change 'req.user.role' to 'req.user.userRole'.
-      if (admin && req.user.role !== "admin") {
+      if (admin && req.user.role !== "admin" && req.user.role !== "superadmin") {
         return res.status(403).json({ message: "Not authorized as admin" });
+      }
+
+      if (superadmin && req.user.role !== "superadmin") {
+        return res.status(403).json({ message: "Not authorized as superadmin" });
       }
 
       // ============================================================

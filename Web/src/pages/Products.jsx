@@ -96,15 +96,24 @@ export default function Products() {
             <option value="Food">Food</option>
           </select>
           
-          <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
-            <input 
-              type="checkbox" 
-              checked={showLowStock}
-              onChange={(e) => setShowLowStock(e.target.checked)}
-              className="w-4 h-4 rounded border-[var(--color-border-subtle)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-            />
-            Low Stock Only
-          </label>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showLowStock}
+            onClick={() => setShowLowStock(!showLowStock)}
+            className="flex items-center gap-2 text-sm font-medium cursor-pointer group focus:outline-none select-none px-2 py-1 rounded-lg hover:bg-[var(--color-bg-base)] transition-colors"
+          >
+            <div className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors duration-300 ${
+              showLowStock ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border-subtle)] group-hover:bg-gray-400 dark:group-hover:bg-gray-600'
+            }`}>
+              <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+                showLowStock ? 'translate-x-4' : 'translate-x-0'
+              }`} />
+            </div>
+            <span className={showLowStock ? 'text-[var(--color-primary)] font-semibold' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}>
+              Low Stock Only
+            </span>
+          </button>
         </div>
 
         <div className="flex items-center bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg p-1 self-end lg:self-auto">
@@ -143,7 +152,7 @@ export default function Products() {
                 <div key={product._id} className="bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden hover:shadow-lg transition-all group flex flex-col">
                   <div className="h-48 bg-gradient-to-br from-[var(--color-bg-base)] to-[var(--color-border-subtle)] relative">
                     {product.image ? (
-                      <img src={`http://localhost:3000${product.image}`} alt={product.name} className="w-full h-full object-contain p-4" />
+                      <img src={product.image.startsWith('http') ? product.image : `http://localhost:3000${product.image}`} alt={product.name} className="w-full h-full object-contain p-4" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-[var(--color-text-secondary)]">
                         <Package size={48} opacity={0.2} />
@@ -198,7 +207,7 @@ export default function Products() {
                       <tr key={product._id} className="hover:bg-[var(--color-bg-base)] transition-colors">
                         <td className="p-4 flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] flex items-center justify-center overflow-hidden">
-                             {product.image ? <img src={`http://localhost:3000${product.image}`} className="w-full h-full object-cover" /> : <Package size={20} className="text-[var(--color-text-secondary)]" />}
+                             {product.image ? <img src={product.image.startsWith('http') ? product.image : `http://localhost:3000${product.image}`} className="w-full h-full object-cover" /> : <Package size={20} className="text-[var(--color-text-secondary)]" />}
                           </div>
                           <span className="font-medium">{product.name}</span>
                         </td>

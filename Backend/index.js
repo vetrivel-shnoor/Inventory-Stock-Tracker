@@ -18,6 +18,8 @@ require("./config/passport")(passport);
 
 // Database imports
 const connectMongo = require("./config/connectMongo"); // Mongo
+const { initializeMinio } = require("./config/minio"); // MinIO
+initializeMinio();
 
 const { createServer } = require("http");
 const app = express();
@@ -33,6 +35,17 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(passport.initialize());
+
+// Rate Limiting setup
+const rateLimit = require("express-rate-limit");
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, 
+  legacyHeaders: false, 
+  message: { message: "Too many requests, please try again later." }
+});
+app.use("/api", limiter);
 const uploadDir = path.join(__dirname, "public", "uploads");
 
 if (!fs.existsSync(uploadDir)) {
@@ -49,6 +62,8 @@ const port = process.env.PORT || 3000;
 (async () => {
   try {
     await Promise.all([connectMongo()]);
+    const seedSuperAdmin = require("./scripts/seedAdmin");
+    await seedSuperAdmin();
 
     // register routes
     app.use("/api", require("./routes/index"));

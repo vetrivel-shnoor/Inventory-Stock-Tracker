@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Transactions from "./pages/Transactions";
+import { UserManagement } from "./pages/UserManagement";
 // import GoogleOneTap from "./components/GoogleOneTap";
 
 function App() {
@@ -74,6 +75,10 @@ function App() {
           <Route 
             path="/transactions" 
             element={user ? <Transactions /> : <Navigate to="/login" replace />} 
+          />
+          <Route 
+            path="/users" 
+            element={user?.role === 'superadmin' ? <UserManagement /> : <Navigate to="/dashboard" replace />} 
           />
           <Route
             path="/profile"

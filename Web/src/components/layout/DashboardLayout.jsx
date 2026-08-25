@@ -1,17 +1,81 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Home, Package, Activity, LogOut, Menu, X, Sun, Moon, Settings } from 'lucide-react';
+import { Home, Package, Activity, LogOut, Menu, X, Sun, Moon, Settings, Users } from 'lucide-react';
 import { useApp } from '../../context/Appcontext';
 import { ThemeContext } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
 import { logout } from '../../services/authApi';
 
+const AvatarImage = ({ user }) => {
+  const [blobLoaded, setBlobLoaded] = React.useState(false);
+  const [imgError, setImgError] = React.useState(false);
+
+  const profileSrc = user?.profilePicture?.startsWith('http') 
+    ? user.profilePicture 
+    : user?.profilePicture 
+      ? `http://localhost:3000${user.profilePicture}` 
+      : null;
+      
+  const isDirectUrl = profileSrc?.startsWith("http") && !profileSrc.includes("localhost");
+
+  React.useEffect(() => {
+    setImgError(false);
+    if (!isDirectUrl) setBlobLoaded(false);
+  }, [profileSrc, isDirectUrl]);
+
+  if (!profileSrc || imgError) {
+    return (
+      <span className="text-white font-bold text-sm z-10 relative">
+        {user?.fullname?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
+      </span>
+    );
+  }
+
+  return (
+    <>
+      {(!isDirectUrl && !blobLoaded && !imgError && profileSrc) && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-gray-200/20 dark:bg-white/10 backdrop-blur-md animate-pulse" />
+      )}
+      <img
+        src={profileSrc}
+        alt="Avatar"
+        referrerPolicy="no-referrer"
+        className={`w-full h-full object-cover absolute inset-0 z-10 transition-opacity duration-300 ${
+          isDirectUrl || blobLoaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setBlobLoaded(true)}
+        onError={() => {
+          setImgError(true);
+          setBlobLoaded(true);
+        }}
+      />
+    </>
+  );
+};
 export const DashboardLayout = () => {
   const { user, setUser } = useApp();
   const { theme, toggleTheme } = React.useContext(ThemeContext);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const checkLowStock = async () => {
+      try {
+        const { inventoryApi } = await import('../../services/inventoryApi');
+        const stats = await inventoryApi.getStats();
+        if (stats.lowStockCount > 0) {
+          toast.error(`${stats.lowStockCount} product(s) are running low on stock!`, {
+            duration: 6000,
+            icon: '⚠️'
+          });
+        }
+      } catch (err) {
+        console.error('Failed to check low stock:', err);
+      }
+    };
+    checkLowStock();
+  }, []);
 
   const handleLogout = async () => {
     const res = await logout();
@@ -25,6 +89,7 @@ export const DashboardLayout = () => {
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Products', path: '/products', icon: Package },
     { name: 'Transactions', path: '/transactions', icon: Activity },
+    ...(user?.role === 'superadmin' ? [{ name: 'Users', path: '/users', icon: Users }] : []),
     { name: 'Profile', path: '/profile', icon: Settings },
   ];
 
@@ -59,12 +124,8 @@ export const DashboardLayout = () => {
         <div className="p-4 border-t border-[var(--color-border-subtle)]">
           <div className="flex items-center justify-between mb-4 px-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden border border-[var(--color-border-subtle)]">
-                {user?.profilePicture ? (
-                  <img src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000${user.profilePicture}`} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  user?.fullname?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'
-                )}
+              <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden border border-[var(--color-border-subtle)] relative">
+                <AvatarImage user={user} />
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-semibold truncate max-w-[100px]">{user?.fullname || user?.username || 'User'}</span>
@@ -75,8 +136,16 @@ export const DashboardLayout = () => {
                 </span>
               </div>
             </div>
-            <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-[var(--color-bg-base)] text-[var(--color-text-secondary)] transition-colors">
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            <button 
+              onClick={toggleTheme} 
+              className="p-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-300/60 dark:border-slate-700/60 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                <Sun size={18} className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+              ) : (
+                <Moon size={18} className="text-indigo-600 drop-shadow-[0_0_8px_rgba(79,70,229,0.3)]" />
+              )}
             </button>
           </div>
           <button
@@ -94,15 +163,19 @@ export const DashboardLayout = () => {
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[var(--color-bg-surface)] border-b border-[var(--color-border-subtle)] z-20">
           <h1 className="text-lg font-bold tracking-tight text-[var(--color-primary)]">StockTracker</h1>
           <div className="flex items-center gap-2">
-             <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-[var(--color-bg-base)] text-[var(--color-text-secondary)]">
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm">
-              {user?.profilePicture ? (
-                <img src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000${user.profilePicture}`} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+             <button 
+              onClick={toggleTheme} 
+              className="p-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-300/60 dark:border-slate-700/60 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center cursor-pointer shrink-0"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                <Sun size={18} className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
               ) : (
-                user?.fullname?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'
+                <Moon size={18} className="text-indigo-600 drop-shadow-[0_0_8px_rgba(79,70,229,0.3)]" />
               )}
+            </button>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden relative">
+              <AvatarImage user={user} />
             </div>
           </div>
         </header>
