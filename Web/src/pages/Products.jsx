@@ -58,12 +58,12 @@ export default function Products() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 h-full flex flex-col">
       {/* Header & Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col items-center justify-center gap-4 text-center mb-4">
         <h1 className="text-2xl font-bold tracking-tight">Product Catalog</h1>
         {isAdmin && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-sm"
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-tr from-blue-600/80 to-indigo-400/80 backdrop-blur-md border border-blue-500/30 text-white rounded-xl hover:shadow-[0_8px_25px_-4px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 transition-all duration-300 font-semibold shadow-sm"
           >
             <Plus size={18} />
             Add Product
@@ -157,7 +157,7 @@ export default function Products() {
                   <div className="p-4 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
-                      <span className="font-bold text-[var(--color-primary)]">${product.price.toFixed(2)}</span>
+                      <span className="font-bold text-[var(--color-primary)]">₹{product.price.toFixed(2)}</span>
                     </div>
                     <span className="text-xs text-[var(--color-text-secondary)] mb-4 bg-[var(--color-bg-base)] px-2 py-1 rounded w-max">
                       {product.category}
@@ -204,7 +204,7 @@ export default function Products() {
                         </td>
                         <td className="p-4 text-sm font-mono text-[var(--color-text-secondary)]">{product.sku}</td>
                         <td className="p-4 text-sm">{product.category}</td>
-                        <td className="p-4 font-semibold">${product.price.toFixed(2)}</td>
+                        <td className="p-4 font-semibold">₹{product.price.toFixed(2)}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium w-8">{product.currentStock}</span>

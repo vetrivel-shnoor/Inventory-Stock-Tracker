@@ -10,7 +10,7 @@ exports.createTransaction = async (req, res) => {
     
     const parsedQuantity = Number(quantity);
     if (parsedQuantity <= 0) {
-      throw new Error('Quantity must be greater than 0');
+      return res.status(400).json({ message: 'Quantity must be greater than 0' });
     }
 
     const product = await Product.findById(productId).session(session);
@@ -32,7 +32,9 @@ exports.createTransaction = async (req, res) => {
     } else if (type === 'OUT') {
       product.currentStock -= parsedQuantity;
     } else {
-      throw new Error('Invalid transaction type');
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Invalid transaction type' });
     }
     
     await product.save({ session });
@@ -57,6 +59,7 @@ exports.createTransaction = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
+    console.error('[Transaction Error]', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

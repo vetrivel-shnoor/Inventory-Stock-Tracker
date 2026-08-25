@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Package, DollarSign, AlertTriangle, Activity } from 'lucide-react';
+import { Package, IndianRupee, AlertTriangle, Activity } from 'lucide-react';
 import { inventoryApi } from '../services/inventoryApi';
 import { CardSkeleton, TableSkeleton } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -65,8 +65,8 @@ export default function Dashboard() {
         />
         <KpiCard 
           title="Total Valuation" 
-          value={`$${(stats?.totalStockValue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
-          icon={DollarSign} 
+          value={`₹${(stats?.totalStockValue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
+          icon={IndianRupee} 
           color="text-green-500" 
           bg="bg-green-50 dark:bg-green-900/20"
         />
@@ -97,6 +97,7 @@ export default function Dashboard() {
                 <XAxis dataKey="name" tick={{ fill: 'var(--color-text-secondary)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--color-text-secondary)' }} axisLine={false} tickLine={false} />
                 <Tooltip 
+                  cursor={false}
                   contentStyle={{ backgroundColor: 'var(--color-bg-surface)', borderColor: 'var(--color-border-subtle)', borderRadius: '8px' }} 
                   itemStyle={{ color: 'var(--color-text-primary)' }}
                 />

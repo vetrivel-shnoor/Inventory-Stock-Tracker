@@ -60,13 +60,9 @@ const CropModal = ({ imageSrc, onCancel, onSave, theme }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div
-        className="relative w-full max-w-md rounded-3xl overflow-hidden flex flex-col max-h-[90vh]"
-        style={{
-          backgroundColor: theme.navbar?.modalBg || "#111",
-          border: `1px solid ${theme.navbar?.border || "#333"}`,
-        }}
-      >
+        <div
+          className="bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] rounded-xl w-full max-w-lg p-6 shadow-2xl overflow-hidden relative"
+        >
         <div className="p-4 flex justify-between items-center border-b border-white/10 z-10 bg-inherit">
           <h3 className="font-bold text-lg">Edit Photo</h3>
           <button
@@ -181,7 +177,7 @@ export default function ProfileHeader({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row items-center md:items-end gap-8 mb-16"
+        className="flex flex-col items-center justify-center gap-6 mb-16 w-full"
       >
         <input
           type="file"
@@ -194,13 +190,7 @@ export default function ProfileHeader({
         {/* Avatar Section */}
         <div className="relative group">
           <div
-            className="w-32 h-32 rounded-full overflow-hidden border-2 transition-transform group-hover:scale-105 flex items-center justify-center relative"
-            style={{
-              borderColor: theme.scrollbar.teeth || "rgba(255,255,255,0.1)",
-              backgroundColor:
-                theme.scrollbar.handleGradientStart ||
-                (theme.bg === "#000000" ? "#18181b" : "#f3f4f6"),
-            }}
+            className="w-32 h-32 rounded-full overflow-hidden border-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] transition-transform group-hover:scale-105 flex items-center justify-center relative"
           >
             {/* 1. SKELETON: Show only if local blob loading OR global loading */}
             {(isLoading ||
@@ -230,8 +220,7 @@ export default function ProfileHeader({
             ) : (
               // 3. FALLBACK ICON (Shows if no src OR if imgError is true)
               <UserIcon
-                className="w-12 h-12 opacity-50 z-0"
-                style={{ color: theme.text }}
+                className="w-12 h-12 opacity-50 z-0 text-[var(--color-text-primary)]"
               />
             )}
           </div>
@@ -246,8 +235,8 @@ export default function ProfileHeader({
         </div>
 
         {/* Info Section */}
-        <div className="text-center md:text-left flex-1 min-w-0">
-          <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap">
+        <div className="text-center flex-1 min-w-0 flex flex-col items-center">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
             <span className="text-3xl sm:text-4xl font-black uppercase tracking-tight truncate max-w-full">
               {user?.fullname || "Welcome"}
             </span>
@@ -257,7 +246,7 @@ export default function ProfileHeader({
               </span>
             )}
           </div>
-          <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
+          <div className="flex items-center justify-center gap-2 mt-2">
             <p className="opacity-60 font-mono text-sm truncate">
               {user?.email}
             </p>
@@ -292,14 +281,10 @@ export default function ProfileHeader({
         </div>
 
         {/* Logout */}
-        <button
-          onClick={onLogoutClick}
-          className="flex items-center gap-2 px-6 py-3 rounded-full border hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50 transition-all text-sm font-bold uppercase tracking-wider group shrink-0"
-          style={{
-            borderColor: theme.navbar?.border || "rgba(150,150,150,0.2)",
-            color: theme.text,
-          }}
-        >
+          <button
+            onClick={onLogoutClick}
+            className="w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm tracking-wider flex items-center justify-center gap-2 border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors"
+          >
           <LogOut
             size={16}
             className="group-hover:-translate-x-1 transition-transform"

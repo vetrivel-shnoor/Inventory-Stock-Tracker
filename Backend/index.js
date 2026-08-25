@@ -42,7 +42,7 @@ if (!fs.existsSync(uploadDir)) {
   console.log('📂 "public/uploads" directory already exists');
 }
 
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+app.use("/public/uploads", express.static(path.join(__dirname, "public/uploads")));
 const port = process.env.PORT || 3000;
 
 // Bootstrap app with all DBs

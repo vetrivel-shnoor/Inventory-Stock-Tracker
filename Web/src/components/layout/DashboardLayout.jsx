@@ -1,26 +1,31 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Home, Package, Activity, LogOut, Menu, X, Sun, Moon } from 'lucide-react';
+import { Home, Package, Activity, LogOut, Menu, X, Sun, Moon, Settings } from 'lucide-react';
 import { useApp } from '../../context/Appcontext';
 import { ThemeContext } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
+import { logout } from '../../services/authApi';
+
 export const DashboardLayout = () => {
-  const { user, dispatch } = useApp();
+  const { user, setUser } = useApp();
   const { theme, toggleTheme } = React.useContext(ThemeContext);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    dispatch({ type: 'LOGOUT' });
-    toast.success('Logged out successfully');
-    navigate('/login');
+  const handleLogout = async () => {
+    const res = await logout();
+    if (res.success) {
+      setUser(null);
+      navigate('/login');
+    }
   };
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Products', path: '/products', icon: Package },
     { name: 'Transactions', path: '/transactions', icon: Activity },
+    { name: 'Profile', path: '/profile', icon: Settings },
   ];
 
   return (
@@ -54,11 +59,15 @@ export const DashboardLayout = () => {
         <div className="p-4 border-t border-[var(--color-border-subtle)]">
           <div className="flex items-center justify-between mb-4 px-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm">
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
+              <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm overflow-hidden border border-[var(--color-border-subtle)]">
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000${user.profilePicture}`} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  user?.fullname?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'
+                )}
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold truncate max-w-[100px]">{user?.username || 'User'}</span>
+                <span className="text-sm font-semibold truncate max-w-[100px]">{user?.fullname || user?.username || 'User'}</span>
                 <span className="text-xs text-[var(--color-text-secondary)] flex items-center gap-1">
                   <span className="px-1.5 py-0.5 rounded-full bg-[var(--color-border-subtle)] text-[10px] font-bold tracking-wider">
                     {user?.role?.toUpperCase() || 'USER'}
@@ -89,7 +98,11 @@ export const DashboardLayout = () => {
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-primary)] to-blue-400 flex items-center justify-center text-white font-bold text-sm">
-              {user?.username?.charAt(0).toUpperCase() || 'U'}
+              {user?.profilePicture ? (
+                <img src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000${user.profilePicture}`} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                user?.fullname?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'
+              )}
             </div>
           </div>
         </header>

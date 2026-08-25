@@ -17,7 +17,6 @@ import toast from "react-hot-toast";
 
 // Import Components
 import ProfileHeader from "../components/profile/ProfileHeader";
-import ProfileSidebar from "../components/profile/ProfileSidebar";
 
 // Import Tabs
 import PersonalInfoTab from "../components/profile/tabs/PersonalInfoTab";
@@ -95,8 +94,7 @@ export default function Profile() {
 
   return (
     <div
-      className="min-h-screen w-full pt-28 pb-24 px-6 md:px-12 transition-colors duration-500"
-      style={{ backgroundColor: theme.bg, color: theme.text }}
+      className="w-full transition-colors duration-500 animate-in fade-in h-full"
     >
       <div className="max-w-[1400px] mx-auto">
         {/* --- HEADER --- */}
@@ -109,38 +107,24 @@ export default function Profile() {
         />
 
         {/* --- MAIN LAYOUT --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* SIDEBAR NAVIGATION */}
-          <div className="lg:col-span-1">
-            <ProfileSidebar
-              tabs={PROFILE_TABS}
-              activeTabId={activeTabId}
-              onTabChange={setActiveTabId}
-              theme={theme}
-              isAdmin={user?.role === "admin"}
-            />
-          </div>
-
-          {/* DYNAMIC CONTENT AREA */}
-          <div className="lg:col-span-3 min-h-[500px]">
-            <AnimatePresence mode="wait">
-              {ActiveComponent && (
-                <motion.div
-                  key={activeTabId}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ActiveComponent
-                    theme={theme}
-                    user={user}
-                    setUser={setUser}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        <div className="w-full mt-8">
+          <AnimatePresence mode="wait">
+            {ActiveComponent && (
+              <motion.div
+                key={activeTabId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ActiveComponent
+                  theme={theme}
+                  user={user}
+                  setUser={setUser}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* --- LOGOUT MODAL --- */}

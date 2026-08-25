@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "concurrently \"node index.js\" \"node workers/index.js\"",
     "dev": "concurrently \"nodemon index.js\" \"nodemon workers/index.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

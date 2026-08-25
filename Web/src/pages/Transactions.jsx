@@ -74,19 +74,19 @@ export default function Transactions() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 h-full flex flex-col">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col items-center justify-center gap-4 text-center mb-4">
         <h1 className="text-2xl font-bold tracking-tight">Ledger & Transactions</h1>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto justify-center">
           <button 
             onClick={() => { setTxType('IN'); setIsModalOpen(true); }}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-tr from-emerald-600/80 to-green-400/80 backdrop-blur-md border border-emerald-500/30 text-white rounded-xl hover:shadow-[0_8px_25px_-4px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 transition-all duration-300 font-semibold shadow-sm"
           >
             <ArrowDownRight size={18} />
             Stock IN
           </button>
           <button 
             onClick={() => { setTxType('OUT'); setIsModalOpen(true); }}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-sm"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-tr from-rose-600/80 to-red-400/80 backdrop-blur-md border border-rose-500/30 text-white rounded-xl hover:shadow-[0_8px_25px_-4px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all duration-300 font-semibold shadow-sm"
           >
             <ArrowUpRight size={18} />
             Stock OUT
@@ -142,8 +142,8 @@ export default function Transactions() {
                       </span>
                     </td>
                     <td className="p-4 text-sm text-right font-medium">
-                      ${(tx.totalValue || 0).toFixed(2)}
-                      <div className="text-[10px] text-[var(--color-text-secondary)] font-normal">@ ${tx.unitPrice?.toFixed(2)}</div>
+                      ₹{(tx.totalValue || 0).toFixed(2)}
+                      <div className="text-[10px] text-[var(--color-text-secondary)] font-normal">@ ₹{tx.unitPrice?.toFixed(2)}</div>
                     </td>
                     <td className="p-4 text-sm text-[var(--color-text-secondary)]">
                       {tx.performedBy?.name || 'System'}
