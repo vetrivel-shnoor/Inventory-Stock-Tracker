@@ -24,7 +24,7 @@ The application is built on a scalable, microservices-ready architecture:
 - **Framework**: Node.js & Express.js
 - **Database**: MongoDB (using Mongoose for object modeling and transactions)
 - **Caching**: Redis-backed caching strategies for high-frequency endpoints (`/categories`).
-- **Authentication**: JWT (JSON Web Tokens) with HttpOnly cookies for security, and Bcrypt for password hashing.
+- **Authentication & Security**: JWT (JSON Web Tokens) with HttpOnly cookies, Bcrypt password hashing, and a strict **Email Allowlist (Pending Invites)** guard preventing unauthorized signups and Google OAuth logins.
 - **Role-Based Access Control (RBAC)**: Middleware enforcing `user`, `admin`, and `superadmin` privileges.
 - **Media Storage**: MinIO (S3-compatible object storage) for hosting product and profile images. Fallback to local file system if disabled.
 - **Background Jobs**: BullMQ backed by Redis for asynchronous image processing (resizing, optimizing) to prevent blocking the main thread during heavy uploads.
@@ -40,6 +40,7 @@ erDiagram
     User ||--o{ Product : creates
     User ||--o{ Transaction : performs
     User ||--o{ AuditLog : triggers
+    User ||--o{ AllowedEmail : "authorizes"
     Product ||--o{ Transaction : "is tracked by"
     Product ||--o{ AuditLog : "is audited by"
 
@@ -48,6 +49,11 @@ erDiagram
         String fullname
         String email
         String role "user | admin | superadmin"
+    }
+    AllowedEmail {
+        ObjectId _id
+        String email "Unique whitelisted email"
+        ObjectId addedBy "Ref User"
     }
     Product {
         ObjectId _id
@@ -94,12 +100,15 @@ To ensure the application performs optimally even with tens of thousands of prod
 - `POST /logout`: Clear JWT cookie
 - `GET /check`: Verify current authentication state
 
-### Users (`/api/users`) - *Requires Superadmin*
+### Users & Access Control (`/api/users`) - *Requires Admin / Superadmin*
 - `GET /`: List all users
 - `POST /`: Create a new user manually
 - `PUT /:id`: Update user details (name, email, password)
 - `PATCH /:id/role`: Update a user's role (admin/user)
 - `DELETE /:id`: Delete a user
+- `GET /allowlist/emails`: List all pending invited/authorized emails
+- `POST /allowlist/bulk`: Bulk authorize emails (comma or newline-separated)
+- `DELETE /allowlist/:id`: Revoke an email's authorization from the allowlist
 
 ### Products (`/api/products`) - *Protected*
 - `GET /`: Get all products (supports `?search`, `?category`, `?lowStock`)

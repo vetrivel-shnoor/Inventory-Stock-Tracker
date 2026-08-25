@@ -161,8 +161,8 @@ export const UserManagement = () => {
 
   const getImageUrl = (path) => {
     if (!path) return null;
-    if (path.startsWith("http")) return path;
-    return `http://localhost:3000${path}`;
+    const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace(/\/api\/?$/, "");
+    return `${API_BASE_URL}${path}`;
   };
 
   const handleBulkAddEmails = async (e) => {
@@ -212,7 +212,7 @@ export const UserManagement = () => {
           )}
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-md"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity shadow-md"
           >
             <UserPlus size={18} />
             <span>Add User</span>
@@ -378,7 +378,7 @@ export const UserManagement = () => {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity shadow-sm"
                   >
                     <ListPlus size={18} />
                     Add Emails
@@ -461,7 +461,7 @@ export const UserManagement = () => {
           </div>
           <div className="pt-4 flex justify-end gap-3">
             <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-base)] rounded-lg transition-colors font-medium">Cancel</button>
-            <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors font-medium shadow-md">
+            <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-md">
               {editingId ? 'Save Changes' : 'Create User'}
             </button>
           </div>

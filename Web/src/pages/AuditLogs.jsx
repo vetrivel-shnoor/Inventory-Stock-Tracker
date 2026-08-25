@@ -61,7 +61,7 @@ export default function AuditLogs() {
     <div className="h-[calc(100vh-4rem)] flex flex-col p-6 max-w-7xl mx-auto w-full gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
             <ShieldAlert className="text-[var(--color-primary)]" />
             Audit Logs
           </h1>

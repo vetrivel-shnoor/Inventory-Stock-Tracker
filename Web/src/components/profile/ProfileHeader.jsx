@@ -11,8 +11,8 @@ import {
 import Cropper from "react-easy-crop";
 import GoogleIcon from "../GoogleIcon";
 
-// Get API URL from env
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// Get API URL from env, ensuring we strip /api for static files
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace(/\/api\/?$/, "");
 
 // --- Helper: Generate Cropped Image ---
 const getCroppedImg = async (imageSrc, pixelCrop) => {
@@ -103,14 +103,14 @@ const CropModal = ({ imageSrc, onCancel, onSave, theme }) => {
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 py-3 rounded-xl font-bold uppercase text-xs hover:bg-white/5 transition-colors"
+              className="flex-1 py-3 rounded-xl font-bold uppercase text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex-1 py-3 rounded-xl font-bold uppercase text-xs bg-white text-black hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl font-bold uppercase text-xs bg-[var(--color-text-primary)] text-[var(--color-bg-base)] hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
             >
               {isSaving ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -237,7 +237,7 @@ export default function ProfileHeader({
         {/* Info Section */}
         <div className="text-center flex-1 min-w-0 flex flex-col items-center">
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <span className="text-3xl sm:text-4xl font-black uppercase tracking-tight truncate max-w-full">
+            <span className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-[var(--color-text-primary)] truncate max-w-full">
               {user?.fullname || "Welcome"}
             </span>
             {user?.role === "admin" && (
@@ -283,7 +283,7 @@ export default function ProfileHeader({
         {/* Logout */}
           <button
             onClick={onLogoutClick}
-            className="w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm tracking-wider flex items-center justify-center gap-2 border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors"
+            className="w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm tracking-wider flex items-center justify-center gap-2 border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-300 shadow-sm"
           >
           <LogOut
             size={16}

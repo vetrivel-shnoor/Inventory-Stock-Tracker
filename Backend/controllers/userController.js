@@ -182,7 +182,8 @@ exports.deleteBulkUsers = async (req, res) => {
 };
 
 /**
- * Get all allowed emails
+ * Get all allowed emails (pending invites)
+ * Returns emails populated with the admin who added them.
  */
 exports.getAllowedEmails = async (req, res) => {
   try {
@@ -194,7 +195,9 @@ exports.getAllowedEmails = async (req, res) => {
 };
 
 /**
- * Bulk add allowed emails
+ * Bulk add allowed emails.
+ * Accepts a comma or newline separated string of emails.
+ * Prevents duplicates and attaches the adding user's ID.
  */
 exports.addAllowedEmailsBulk = async (req, res) => {
   try {
@@ -236,7 +239,7 @@ exports.addAllowedEmailsBulk = async (req, res) => {
 };
 
 /**
- * Delete an allowed email
+ * Delete an allowed email (Revoke pending invite)
  */
 exports.deleteAllowedEmail = async (req, res) => {
   try {

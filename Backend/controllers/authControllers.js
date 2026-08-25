@@ -46,6 +46,8 @@ exports.Signup = async (req, res) => {
     }
 
     // 5.5 Check Allowlist
+    // Prevents unauthorized users from registering. 
+    // They must either be in the AllowedEmail collection or be an existing superadmin in ENV.
     const allowed = await isEmailAllowed(email);
     if (!allowed) {
       return res.status(403).json({ message: "Access Denied: Your email is not authorized by an administrator." });
@@ -63,7 +65,8 @@ exports.Signup = async (req, res) => {
       phone,
     });
 
-    // Remove from Allowlist since they are now a registered user
+    // 7. Cleanup Allowlist (Pending Invites)
+    // Once a user successfully registers, remove them from the allowlist so it only shows pending invites.
     await AllowedEmail.findOneAndDelete({ email: email.toLowerCase().trim() });
 
     generateTokenAndSetCookie(res, newUser._id);
@@ -95,6 +98,8 @@ exports.Login = async (req, res) => {
     }
 
     // Check Allowlist
+    // Extra security layer to ensure even existing accounts can't login if they were somehow bypassed,
+    // though existing users are usually inherently allowed via isEmailAllowed logic.
     const allowed = await isEmailAllowed(email);
     if (!allowed) {
       return res.status(403).json({ message: "Access Denied: Your email is not authorized by an administrator." });

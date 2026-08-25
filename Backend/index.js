@@ -48,26 +48,11 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 const uploadDir = path.join(__dirname, "public", "uploads");
 
-// Function to clear a directory
-const clearDirectory = (directory) => {
-  if (fs.existsSync(directory)) {
-    fs.readdirSync(directory).forEach((file) => {
-      const curPath = path.join(directory, file);
-      if (fs.lstatSync(curPath).isDirectory()) {
-        clearDirectory(curPath);
-      } else {
-        fs.unlinkSync(curPath);
-      }
-    });
-  }
-};
-
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log('📂 Created "public/uploads" directory');
 } else {
-  console.log('📂 "public/uploads" directory already exists, clearing contents...');
-  clearDirectory(uploadDir);
+  console.log('📂 "public/uploads" directory already exists. Preserving contents.');
 }
 
 // -----------------------------------------------------------------------------
@@ -88,10 +73,13 @@ app.get("/public/uploads/*objectName", async (req, res, next) => {
     const stream = await minioClient.getObject(bucketName, objectName);
     stream.pipe(res);
   } catch (err) {
-    if (err.code === 'NoSuchKey') return res.status(404).send('Not found');
+    if (err.code === 'NoSuchKey') return next(); // Let express.static handle it if it exists locally
     next();
   }
 });
+
+// Serve the public directory as a final fallback for local files
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 const port = process.env.PORT || 3000;
 

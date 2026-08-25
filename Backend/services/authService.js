@@ -1,6 +1,12 @@
 const User = require("../models/userModel");
 const AllowedEmail = require("../models/AllowedEmail");
 
+/**
+ * Checks if a given email is authorized to access the system.
+ * 1. Superadmins (from ENV) are always allowed.
+ * 2. Existing registered users are always allowed.
+ * 3. New users must be present in the AllowedEmail collection (Pending Invites).
+ */
 async function isEmailAllowed(email) {
   if (!email) return false;
   const lowerEmail = email.toLowerCase().trim();
@@ -18,8 +24,13 @@ async function isEmailAllowed(email) {
   return !!allowed;
 }
 
+/**
+ * Handles Google One Tap and OAuth login/signup.
+ * Integrates with the Allowlist to reject unauthorized Google accounts.
+ */
 async function findOrCreateGoogleUser(profile) {
   // Check Allowlist first
+  // Reject the Google Auth if they aren't invited/allowed
   const allowed = await isEmailAllowed(profile.email);
   if (!allowed) {
     throw new Error("Access Denied: Your email is not authorized by an administrator.");
@@ -51,7 +62,8 @@ async function findOrCreateGoogleUser(profile) {
     password: "google-onetap-" + Date.now(),
   });
 
-  // Remove from Allowlist since they are now a registered user
+  // Cleanup Allowlist (Pending Invites)
+  // Remove the email from the allowlist since they successfully registered via Google
   await AllowedEmail.findOneAndDelete({ email: profile.email.toLowerCase().trim() });
 
   return newUser;
