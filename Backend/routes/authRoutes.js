@@ -52,7 +52,7 @@ router.get(
     generateTokenAndSetCookie(res, req.user._id);
 
     // 2. Redirect to Frontend (Dashboard/Home)
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const clientUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     res.redirect(clientUrl);
   }
 );
