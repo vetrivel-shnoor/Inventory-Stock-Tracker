@@ -208,7 +208,7 @@ const Signup = () => {
         </h1>
         <p
           className="text-sm font-medium"
-          style={{ color: theme.navbar.textIdle }}
+          style={{ color: theme?.navbar?.textIdle }}
         >
           Join us to explore the world.
         </p>
@@ -367,7 +367,7 @@ const Signup = () => {
 
             <span
               className="ml-2 group-hover:text-white transition-colors duration-300"
-              style={{ color: theme.navbar.textIdle }}
+              style={{ color: theme?.navbar?.textIdle }}
             >
               Accept the
               <Link
@@ -426,7 +426,7 @@ const Signup = () => {
       </form>
 
       <div className="mt-4 text-center">
-        <p className="text-xs" style={{ color: theme.navbar.textIdle }}>
+        <p className="text-xs" style={{ color: theme?.navbar?.textIdle }}>
           Already have an account?{" "}
           <Link
             to="/login"

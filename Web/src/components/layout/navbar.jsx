@@ -367,7 +367,7 @@ const Navbar = () => {
 };
 
 // --- SIMPLIFIED FlipLink Component ---
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 const FlipLink = ({ children, to, onClick, theme }) => {
   return (

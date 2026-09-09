@@ -121,13 +121,13 @@ const Login = () => {
 
         <div className="flex items-center justify-between text-xs pt-1 px-1">
           <label className="flex items-center cursor-pointer group"></label>
-          <Link
+          {/* <Link
             to="/forgot-password"
             replace
             className="font-medium text-blue-500 hover:text-blue-400 transition-colors"
           >
             Forgot password?
-          </Link>
+          </Link> */}
         </div>
 
         <button
