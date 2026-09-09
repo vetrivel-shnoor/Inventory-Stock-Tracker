@@ -1,6 +1,6 @@
 # Inventory & Stock Tracker
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-https%3A%2F%2Finventory.cyberanzen.icu-brightgreen?style=for-the-badge&logo=cloudflare)](https://inventory.cyberanzen.icu/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-https%3A%2F%2Finventory-shnoor.duckdns.org-brightgreen?style=for-the-badge&logo=cloudflare)](https://inventory-shnoor.duckdns.org/)
 
 **🌐 Live Site**: [https://inventory-shnoor.duckdns.org/](https://inventory-shnoor.duckdns.org/)
 
