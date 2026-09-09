@@ -12,10 +12,11 @@ import { SignUp } from "../services/authApi";
 import { useApp } from "../context/Appcontext";
 const Signup = () => {
   const themeContext = useContext(ThemeContext);
-  const theme = themeContext?.theme || {
-    bg: "#0f172a",
-    text: "#ffffff",
-    navbar: { textIdle: "#94a3b8" },
+  const isDark = themeContext?.theme === "dark" || themeContext?.theme !== "light";
+  const theme = {
+    bg: isDark ? "#0f172a" : "#ffffff",
+    text: isDark ? "#ffffff" : "#0f172a",
+    navbar: { textIdle: isDark ? "#94a3b8" : "#64748b" },
     card: { btnBg: "#3b82f6", btnText: "#ffffff" },
   };
 
