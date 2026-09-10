@@ -69,16 +69,16 @@ exports.Signup = async (req, res) => {
     // Once a user successfully registers, remove them from the allowlist so it only shows pending invites.
     await AllowedEmail.findOneAndDelete({ email: email.toLowerCase().trim() });
 
+    const userToReturn = newUser.toObject();
+    delete userToReturn.password;
+    delete userToReturn.__v;
+    delete userToReturn.updatedAt;
+
     generateTokenAndSetCookie(res, newUser._id);
 
     res.status(201).json({
       message: "Signup successful",
-      user: {
-        id: newUser._id,
-        email: newUser.email,
-        fullname: newUser.fullname,
-        username: newUser.username,
-      },
+      user: userToReturn,
     });
   } catch (error) {
     console.error("Signup Error:", error);
@@ -143,14 +143,14 @@ exports.Login = async (req, res) => {
     // Generate Token & Set Cookie
     generateTokenAndSetCookie(res, user._id);
 
+    const userToReturn = user.toObject();
+    delete userToReturn.password;
+    delete userToReturn.__v;
+    delete userToReturn.updatedAt;
+
     res.status(200).json({
       message: "Login successful",
-      user: {
-        id: user._id,
-        email: user.email,
-        fullname: user.fullname,
-        username: user.username,
-      },
+      user: userToReturn,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

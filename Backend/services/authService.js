@@ -38,7 +38,13 @@ async function findOrCreateGoogleUser(profile) {
 
   // 1. Check by Google ID
   let user = await User.findOne({ googleId: profile.sub }); // Note: Google calls ID 'sub' in JWTs
-  if (user) return user;
+  if (user) {
+    const userToReturn = user.toObject();
+    delete userToReturn.password;
+    delete userToReturn.__v;
+    delete userToReturn.updatedAt;
+    return userToReturn;
+  }
 
   // 2. Check by Email
   if (profile.email) {
@@ -48,7 +54,11 @@ async function findOrCreateGoogleUser(profile) {
       if (!user.profilePicture && profile.picture)
         user.profilePicture = profile.picture;
       await user.save();
-      return user;
+      const userToReturn = user.toObject();
+      delete userToReturn.password;
+      delete userToReturn.__v;
+      delete userToReturn.updatedAt;
+      return userToReturn;
     }
   }
 
@@ -66,7 +76,12 @@ async function findOrCreateGoogleUser(profile) {
   // Remove the email from the allowlist since they successfully registered via Google
   await AllowedEmail.findOneAndDelete({ email: profile.email.toLowerCase().trim() });
 
-  return newUser;
+  const newUserToReturn = newUser.toObject();
+  delete newUserToReturn.password;
+  delete newUserToReturn.__v;
+  delete newUserToReturn.updatedAt;
+
+  return newUserToReturn;
 }
 
 module.exports = { findOrCreateGoogleUser, isEmailAllowed };

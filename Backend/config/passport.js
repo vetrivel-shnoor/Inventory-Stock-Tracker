@@ -31,7 +31,11 @@ module.exports = (passport) => {
           let user = await User.findOne({ googleId: profile.id });
           if (user) {
             console.log("User found by Google ID:", user.email);
-            return done(null, user);
+            const userToReturn = user.toObject();
+            delete userToReturn.password;
+            delete userToReturn.__v;
+            delete userToReturn.updatedAt;
+            return done(null, userToReturn);
           }
 
           // 2. Check existing user by Email (Account Linking)
@@ -49,7 +53,11 @@ module.exports = (passport) => {
               }
 
               await user.save();
-              return done(null, user);
+              const userToReturn = user.toObject();
+              delete userToReturn.password;
+              delete userToReturn.__v;
+              delete userToReturn.updatedAt;
+              return done(null, userToReturn);
             }
           }
 
@@ -83,7 +91,12 @@ module.exports = (passport) => {
           const newUser = await User.create(newUserObj);
           console.log("USER CREATED SUCCESSFULLY:", newUser._id);
 
-          return done(null, newUser);
+          const newUserToReturn = newUser.toObject();
+          delete newUserToReturn.password;
+          delete newUserToReturn.__v;
+          delete newUserToReturn.updatedAt;
+
+          return done(null, newUserToReturn);
         } catch (err) {
           console.error("CRITICAL DB ERROR:", err);
           return done(err, null);
