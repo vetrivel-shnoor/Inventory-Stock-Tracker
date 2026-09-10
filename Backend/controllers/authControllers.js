@@ -112,6 +112,34 @@ exports.Login = async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
+    // Auto-sync superadmin privileges based on env
+    const superAdminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+    if (process.env.DEFAULT_SUPERADMIN_EMAIL) {
+      superAdminEmails.push(process.env.DEFAULT_SUPERADMIN_EMAIL.trim().toLowerCase());
+    }
+    
+    const isSuperAdminEmail = superAdminEmails.includes(user.email.toLowerCase());
+
+    let roleChanged = false;
+    if (isSuperAdminEmail && user.role !== "superadmin") {
+      user.role = "superadmin";
+      roleChanged = true;
+    } else if (!isSuperAdminEmail && user.role === "superadmin") {
+      user.role = "user";
+      roleChanged = true;
+    }
+
+    if (roleChanged) {
+      await user.save();
+      try {
+        const { connection } = require("../config/redis");
+        await connection.flushall();
+        console.log("Redis cache cleared due to role change on login.");
+      } catch (err) {
+        console.error("Failed to clear Redis cache:", err);
+      }
+    }
+
     // Generate Token & Set Cookie
     generateTokenAndSetCookie(res, user._id);
 
@@ -160,12 +188,24 @@ exports.Me = async (req, res) => {
   
   const isSuperAdminEmail = superAdminEmails.includes(user.email.toLowerCase());
 
+  let roleChanged = false;
   if (isSuperAdminEmail && user.role !== "superadmin") {
     user.role = "superadmin";
-    await user.save();
+    roleChanged = true;
   } else if (!isSuperAdminEmail && user.role === "superadmin") {
     user.role = "user";
+    roleChanged = true;
+  }
+
+  if (roleChanged) {
     await user.save();
+    try {
+      const { connection } = require("../config/redis");
+      await connection.flushall();
+      console.log("Redis cache cleared due to role change on profile fetch.");
+    } catch (err) {
+      console.error("Failed to clear Redis cache:", err);
+    }
   }
 
   res.status(200).json({
