@@ -154,6 +154,10 @@ exports.Me = async (req, res) => {
 
   // Auto-sync superadmin privileges based on env
   const superAdminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+  if (process.env.DEFAULT_SUPERADMIN_EMAIL) {
+    superAdminEmails.push(process.env.DEFAULT_SUPERADMIN_EMAIL.trim().toLowerCase());
+  }
+  
   const isSuperAdminEmail = superAdminEmails.includes(user.email.toLowerCase());
 
   if (isSuperAdminEmail && user.role !== "superadmin") {
