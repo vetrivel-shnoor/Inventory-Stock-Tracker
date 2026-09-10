@@ -9,14 +9,15 @@ import toast from 'react-hot-toast';
 import CreatableSelect from 'react-select/creatable';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-const resolveImageUrl = (imagePath) => {
+const resolveImageUrl = (imagePath, updatedAt) => {
   if (!imagePath) return '';
   if (imagePath.startsWith('http')) return imagePath;
   
   // With Nginx API Gateway, both /api and /public/uploads/ are natively routed to the correct backend container.
   // The frontend can just request the path directly without prepending the backend URL.
   const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
-  return `${baseUrl}${imagePath}`;
+  const url = `${baseUrl}${imagePath}`;
+  return updatedAt ? `${url}?t=${new Date(updatedAt).getTime()}` : url;
 };
 /**
  * Products Page
@@ -166,7 +167,7 @@ export default function Products() {
       lowStockThreshold: product.lowStockThreshold,
       image: null 
     });
-    setImagePreview(product.image ? resolveImageUrl(product.image) : null);
+    setImagePreview(product.image ? resolveImageUrl(product.image, product.updatedAt) : null);
     setIsModalOpen(true);
   };
 
@@ -207,12 +208,16 @@ export default function Products() {
 
       if (editingId) {
         await inventoryApi.updateProduct(editingId, data);
-        fetchProducts(page);
         toast.success('Product updated');
+        setIsModalOpen(false);
+        setTimeout(() => {
+          setPage(1);
+          fetchProducts(1);
+        }, 1500); // Wait for background worker to process image
       } else {
         const newProduct = await inventoryApi.createProduct(data);
-        // Refresh products from server to get updated data
-        fetchProducts(page);
+        toast.success('Product added');
+        setIsModalOpen(false);
         
         // Ensure new category is added to dropdown if it's new
         const exists = categories.find(c => c.value === newProduct.category);
@@ -220,9 +225,11 @@ export default function Products() {
             setCategories([...categories, { value: newProduct.category, label: newProduct.category }]);
         }
         
-        toast.success('Product added');
+        setTimeout(() => {
+          setPage(1);
+          fetchProducts(1);
+        }, 1500); // Wait for background worker to process image
       }
-      setIsModalOpen(false);
     } catch (error) {
       toast.error(error.response?.data?.message || `Failed to ${editingId ? 'update' : 'add'} product`);
     }
@@ -405,7 +412,7 @@ export default function Products() {
                     <span className="px-2 py-1 bg-black/40 backdrop-blur-md text-white text-xs rounded border border-white/10 shadow-sm">{product.category}</span>
                   </div>
                   {product.image ? (
-                    <img loading="lazy" src={resolveImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain filter group-hover:scale-105 transition-transform duration-500" />
+                    <img loading="lazy" src={resolveImageUrl(product.image, product.updatedAt)} alt={product.name} className="w-full h-full object-contain filter group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center opacity-30 text-[var(--color-text-secondary)]">
                       <Package size={48} className="mb-2" />
@@ -499,7 +506,7 @@ export default function Products() {
                         )}
                         <div className="flex-1 flex items-center gap-3">
                            <div className="w-10 h-10 rounded-lg bg-black/20 overflow-hidden flex items-center justify-center">
-                              {product.image ? <img loading="lazy" src={resolveImageUrl(product.image)} className="w-full h-full object-cover" /> : <Package size={16}/>}
+                              {product.image ? <img loading="lazy" src={resolveImageUrl(product.image, product.updatedAt)} className="w-full h-full object-cover" /> : <Package size={16}/>}
                            </div>
                            <span className="font-medium truncate">{product.name}</span>
                         </div>
