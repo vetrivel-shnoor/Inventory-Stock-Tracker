@@ -43,3 +43,18 @@ const seedSuperAdmin = async () => {
 };
 
 module.exports = seedSuperAdmin;
+
+// Allow running the script directly
+if (require.main === module) {
+  require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+  mongoose.connect(process.env.MONGO_DB).then(() => {
+    console.log("🔌 Connected to MongoDB");
+    seedSuperAdmin().then(() => {
+      console.log("🏁 Standalone seeding finished.");
+      process.exit(0);
+    });
+  }).catch((err) => {
+    console.error("❌ Failed to connect to DB for seeding:", err);
+    process.exit(1);
+  });
+}
